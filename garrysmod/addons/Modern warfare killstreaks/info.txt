@@ -1,0 +1,11 @@
+"AddonInfo"
+ {
+    "name"                "MW2 killstreaks for Garry's mod"
+    "version"             "2.5"
+    "up_date"             ""
+    "author_name"         "Death dealer142 - Made the Addon. B1N4RY - Helping me with the addon. SiPlus - Made the AC-130 HUD"
+    "author_email"        ""
+    "author_url"	  ""
+    "info"                "Gives you the ability to use the killstreaks from the game Call of duty: Modern Warfare 2"
+    "override"            "0"
+ }

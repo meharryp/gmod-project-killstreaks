@@ -1,0 +1,5 @@
+particles_manifest
+{
+	"file"		"particles/mw2_explodonates.pcf"
+	"file"          "particles/carepackagemarker.pcf"
+}
