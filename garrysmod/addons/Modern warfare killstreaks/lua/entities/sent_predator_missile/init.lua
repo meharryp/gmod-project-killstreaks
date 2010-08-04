@@ -3,7 +3,6 @@ AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 IncludeClientFile("cl_init.lua")
 
-//ENT.moveFactor = 30;
 ENT.moveFactor = 1;
 ENT.speedFactor = 1;
 ENT.speedBoost = true;
@@ -23,7 +22,7 @@ function ENT:PhysicsUpdate()
 	self.ang = self:GetAngles()
 	
 	if self.Entity.Owner:KeyDown( IN_FORWARD ) then --IN_FORWARD
-		if self.ang.p > 0 then
+		if self.ang.p > 60 then
 			self.ang =  Angle( self.ang.p - self.moveFactor, self.ang.y, self.ang.r )
 		end
 	elseif self.Owner:KeyDown( IN_BACK ) then
@@ -37,23 +36,7 @@ function ENT:PhysicsUpdate()
 		self.ang =  Angle( self.ang.p, self.ang.y + self.moveFactor, self.ang.r )
 	end	
 	self:SetAngles(self.ang)
-	--[[
-	if 	self.Entity.Owner:KeyDown( IN_FORWARD ) then --IN_FORWARD
-		self.Entity:SetPos(self.Entity:GetPos() + Vector(self.moveFactor,0,0));
-	end
-			
-	if 	self.Owner:KeyDown( IN_BACK ) then
-		self.Entity:SetPos(self.Entity:GetPos() - Vector(self.moveFactor,0,0));
-	end	
 	
-	if 	self.Entity.Owner:KeyDown( IN_MOVERIGHT ) then
-		self.Entity:SetPos(self.Entity:GetPos() - Vector(0,self.moveFactor,0));
-	end
-			
-	if 	self.Owner:KeyDown( IN_MOVELEFT ) then
-		self.Entity:SetPos(self.Entity:GetPos() + Vector(0,self.moveFactor,0));
-	end	
-	]]
 	if self.Owner:KeyDown( IN_ATTACK ) && self.speedBoost then
 		self.speedFactor = 3;
 		self.speedBoost = false;
@@ -87,14 +70,13 @@ function ENT:Initialize()
 	local skyVector = Vector(lplPos.x,lplPos.y, self.Sky);
 	self.speedFactor = 1;
 	self.speedBoost = true;
-	self.Entity:SetModel( "models/military2/missile/missile_sm2.mdl" ); --//
+	self.Entity:SetModel( "models/military2/bomb/bomb_cbu.mdl" ); --// "models/military2/missile/missile_sm2.mdl" );
 	
 	self.Entity:PhysicsInit( SOLID_VPHYSICS )
 	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )	
 	self.Entity:SetSolid( SOLID_VPHYSICS )
 
 	self.Entity:SetPos(skyVector)
-	//self.Entity:SetAngles(Vector(90,0,0))
 	self.Entity:SetAngles(Angle(75, self.Owner:EyeAngles().y, 0))
 	
 	

@@ -445,6 +445,8 @@ function removeHUD()
 	if UseThermal then
 		removeThermalVision();
 	end
+	LocalPlayer():GetActiveWeapon().MouseSensitivity = 1
+	
 end
 
 function PlayAC130KillSound(um)

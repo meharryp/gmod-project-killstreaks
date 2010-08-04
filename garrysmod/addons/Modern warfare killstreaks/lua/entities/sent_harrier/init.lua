@@ -205,7 +205,7 @@ end
 
 function ENT:FilterEnemy(v)
 	if v:IsValid() then
-		if ( v:IsNPC() && checkForStriders(v) || (v:IsPlayer() && v != self.Owner && GetConVarNumber("sbox_plpldamage") != 0 && self.Owner:Team() != v:Team()) ) then
+		if ( ( v:IsNPC() && checkForStriders(v) ) || (v:IsPlayer() && v != self.Owner && GetConVarNumber("sbox_plpldamage") != 0 && self.Owner:Team() != v:Team()) ) then
 			if !table.HasValue(self.friendlys, v:GetClass()) then
 				if self:traceHitEnemy(v) then 			
 					return true;
@@ -331,6 +331,16 @@ function ENT:BlowUpJet()
 		effectdata:SetScale( 1 )
 		
 		--Explosions!
+		
+		ParticleExplode = ents.Create("info_particle_system")
+		ParticleExplode:SetPos(self:GetPos())
+		ParticleExplode:SetKeyValue("effect_name", "harrier_explode") -- The names are cluster_explode, 40mm_explode, and agm_explode.
+		ParticleExplode:SetKeyValue("start_active", "1")
+		ParticleExplode:Spawn()
+		ParticleExplode:Activate()
+		ParticleExplode:Fire("kill", "", 20) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.	
+		
+		
 		util.Effect( "Explosion", effectdata )	
 		util.Effect( "HelicopterMegaBomb", effectdata )	
 		util.Effect( "cball_explode", effectdata )

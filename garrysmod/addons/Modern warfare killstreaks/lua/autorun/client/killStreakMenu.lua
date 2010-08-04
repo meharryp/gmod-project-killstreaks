@@ -53,6 +53,7 @@ local centerX = ScrW()/2 - width/2
 local centerY = ScrH()/2 - height/2
 local killstreaks = {"UAV = 3", "Care Package = 4", "Predator missile = 5", "Precision Airstrike = 6", "Harrier = 7", "Emergency Airdrop = 8", "Stealth bomber = 9", "AC-130 = 11", "Nuke = 25"}
 
+
 function MW2KillstreakChooseFrame()
 	local select3 = 0;
 	local canUseNuke = GetConVarNumber("mw2_Allow_Nuke") or 0
@@ -62,7 +63,7 @@ function MW2KillstreakChooseFrame()
 	DermaPanel:SetTitle( "MW2 Killstreaks" )
 	DermaPanel:SetVisible( true )
 	DermaPanel:SetDraggable( false )
-	DermaPanel:ShowCloseButton( false )
+	DermaPanel:ShowCloseButton( true )
 	DermaPanel:MakePopup()
 	
 	lastLength = 0;	
@@ -71,13 +72,14 @@ function MW2KillstreakChooseFrame()
 	StreakComboBox:SetSize( 100, 185 )
 	StreakComboBox:SetMultiple( false )
 	for k,v in ipairs(killstreaks) do
-		if string.len(v) > lastLength then 		lastLength = string.len(v) 	 end
+		if string.len(v) > lastLength then 		lastLength = string.len(v)	end
 		
 		StreakComboBox:SetSize(lastLength * 5 + 5, 185)
 		if  v != "Nuke = 25" || ( canUseNuke == 1 && v == "Nuke = 25" ) then
 			StreakComboBox:AddItem(v);
 		end
 	end
+	
 	CBx, CBy = StreakComboBox:GetPos();
 	
 	local myButton = vgui.Create("DButton", DermaPanel)

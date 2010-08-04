@@ -1,11 +1,10 @@
 include( 'shared.lua' )
 
+ENT.ExplosionSound = Sound("killstreak_explosions/105_explosion.wav")
+
 function ENT:PhysicsUpdate()
 	self.PhysObj:SetVelocity(self.Entity:GetForward() * 3500)
 end
-
-function ENT:Think()
- end
 
 function ENT:Initialize()	
 	self.Entity:SetModel( "models/military2/bomb/bomb_gbu10.mdl" );
@@ -18,6 +17,8 @@ function ENT:Initialize()
 	if (self.PhysObj:IsValid()) then
 		self.PhysObj:Wake()
 	end
+	
+	self.Entity:EmitSound("ac-130_kill_sounds/105mminair.wav", 475, 100)
 end
 
 function ENT:PhysicsCollide( data, physobj )
@@ -37,6 +38,8 @@ function ENT:Explosion()
 	
 	util.BlastDamage(self, self.Owner, self:GetPos(), blastRadius, blastRadius)
 
+	self:EmitSound(self.ExplosionSound, 80,100)
+	
 	timer.Simple(.5, self.CountDeadBodys, self, targets)
 	
 	ParticleExplode = ents.Create("info_particle_system")

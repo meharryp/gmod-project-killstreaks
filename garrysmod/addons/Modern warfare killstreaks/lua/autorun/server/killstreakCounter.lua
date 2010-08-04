@@ -133,17 +133,19 @@ function useKillStreak(player, command, arguments ) -- command for the user to u
 	player:SetNetworkedString("AddKillStreak", tostring(killStr))
 
 end
-
+--[[
 function damageInfo(ent, inflictor, attacker, amount, dmginfo) -- Allows the correct kill icon to be drawn for the explosive.
 	if( dmginfo:IsExplosionDamage() && ((attacker:GetClass() == "sent_predator_missile" && ent:GetClass() != "sent_predator_missile") || (attacker:GetClass() == "sent_bomblet" && ent:GetClass() != "sent_bomblet") || (attacker:GetClass() == "sent_air_strike_bomb" && ent:GetClass() != "sent_air_strike_bomb") || (attacker:GetClass() == "sent_105mm" && ent:GetClass() != "sent_105mm") || (attacker:GetClass() == "sent_40mm" && ent:GetClass() != "sent_40mm") )) then 
+		MsgN("Attacker = " .. ent:GetClass() )
 		dmginfo:SetInflictor(inflictor:GetOwner())
 		dmginfo:SetAttacker(attacker.Owner)
 	elseif ( inflictor:GetClass() == "sent_predator_missile" ) then 
+		MsgN("Preadtor missile killer")
 		dmginfo:SetAttacker(inflictor.Owner)
 	end
 	
 end
-
+]]
 function setKillstreaks( pl, handler, id, encoded, decoded )
 	if pl.FirstSpawn then
 		pl.curKillstreaks = decoded;
@@ -176,4 +178,3 @@ concommand.Add( "Use_KillStreak", useKillStreak )
 hook.Add("PlayerInitialSpawn" ,"SetUpKillStreakCounter", playerJoin)
 hook.Add( "PlayerDeath", "ResetKillStreak", playerDies )
 hook.Add("OnNPCKilled", "AddKillsToKillStrreak", npcDeath)
-hook.Add("EntityTakeDamage", "KillStreakBombings", damageInfo)

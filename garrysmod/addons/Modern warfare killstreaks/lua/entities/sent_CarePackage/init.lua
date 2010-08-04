@@ -1,7 +1,7 @@
 AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 ENT.dropPos = NULL;
-local radius = 100;
+local radius = 200;
 ENT.ground = 0;
 ENT.RemoveDelay = CurTime();
 ENT.crate = NULL;
@@ -17,7 +17,6 @@ function ENT:PhysicsUpdate()
 	if !self.IsInZone then
 		self.PhysObj:SetVelocity(self.Entity:GetForward()*1500)
 	else
-		//self.Owner:ChatPrint("Dropping")
 		if !self.DropOnce then
 			timer.Simple(2, self.DropCrate, self)
 			self.DropOnce = true;
@@ -53,7 +52,6 @@ end
 function ENT:Initialize()	
 	hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );	
 	self.Owner = self:GetVar("owner")		
-	//MsgN(tostring(self.Owner))
 	self.dropPos = self:GetVar("PackageDropZone", NULL) -- Needs to be set from the weapon
 	self.ground = findGround() + 1200;
 	//self.ground = self.dropPos.z + 2000;
@@ -91,7 +89,7 @@ function ENT:Initialize()
 	self.Back:GetPhysicsObject():EnableGravity(false)
 
 	self.crate = ents.Create( "sent_supplyCrate" );
-	self.crate:SetPos( self:GetPos() + (self:GetRight() * 2) + (self:GetUp() * -80) + (self:GetForward() * 13) )
+	self.crate:SetPos( self:GetPos() + (self:GetRight() * 1) + (self:GetUp() * -64) + (self:GetForward() * 8.5) )
 	self.crate:SetAngles(self.Entity:GetAngles() + Angle(0,90,0));
 	self.crate:SetVar("owner",self.Owner)
 	self.crate:Spawn();
@@ -116,7 +114,7 @@ function ENT:FindDropZone(vec)
 	local jetPos = self.Entity:GetPos();
 	local distance = jetPos - self.dropPos;
 	if math.abs(distance.x) <= radius && math.abs(distance.y) <= radius then
-		return true;
+		return true;		
 	end
 	return false;
 end

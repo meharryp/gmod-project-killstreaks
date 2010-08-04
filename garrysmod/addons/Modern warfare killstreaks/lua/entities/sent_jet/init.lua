@@ -2,6 +2,7 @@ AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 ENT.dropPos = NULL;
 local radius = 500;
+local jetModel = Model("models/harrier.mdl")
 ENT.ground = 0;
 ENT.dropDelay = CurTime();
 ENT.droppedBombset1 = false;
@@ -36,7 +37,6 @@ end
 
 function ENT:Initialize()	
 	hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );
-	//local bombSent = "sent_air_strike_bomb"
 	local bombSent = "sent_air_strike_cluster"
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 	self.StartPos = self:GetVar("WallLocation", NULL);
@@ -56,7 +56,7 @@ function ENT:Initialize()
 		self.Owner:SetNetworkedVector("Harrier_Spawn_Pos", self.spawnZone);
 	end	
 		
-	self.Entity:SetModel( "models/harrier.mdl" )
+	self.Entity:SetModel( jetModel )
 	self.Entity:SetColor(255,255,255,255)
 	self.Entity:SetPos(self.spawnZone )
 	self.Entity:SetAngles( self.StartAngle )
