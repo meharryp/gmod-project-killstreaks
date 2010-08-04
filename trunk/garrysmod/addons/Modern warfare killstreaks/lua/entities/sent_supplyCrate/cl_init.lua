@@ -8,6 +8,8 @@ local height = 10
 local x = ScrW()/2 - fullWidth/2
 local y = ScrH()/2 - height/2
 local offset = 4
+local DisFromCrate = CreateConVar ("Supply_CrateDistance", "75")
+local setHook = false
 
 function drawProgressBar()
 	if width > fullWidth then
@@ -28,6 +30,7 @@ function drawProgressBar()
 		datastream.StreamToServer( "SupplyCrate_GiveReward" )
 		timer.Stop("SupplyCrate_ProgressBarTimer")
 		hook.Remove("HUDPaint", "SupplyCrate_ProgressBar");
+		hook.Remove("HUDPaint", "SupplyCrate_PopUpText")
 		return;
 	end
 end
@@ -54,19 +57,39 @@ function ENT:Draw()
 	self.Entity:DrawModel()
 	
 	local reward = self:GetNetworkedString("SupplyCrate_Reward")
-	MsgN("CL Reward = " .. reward)
 	local tex = surface.GetTextureID("VGUI/killstreaks/animated/" .. reward)
 	
 	local wlh = getEntityWidthLengthHeight(self)
-	local height = wlh.z
+	local eHeight = wlh.z
 	local width = wlh.x
-	entPos = self:GetPos() + Vector(0, 0, height + 16)
+	entPos = self:GetPos() + Vector(0, 0, eHeight + 8)
 	
 	cam.Start3D2D( entPos, Angle(0, LocalPlayer():GetAngles().y - 90, 90), 1 )
         surface.SetTexture(tex)
 		surface.SetDrawColor(255,255,255,255) // Makes sure the image draws with all colors
-		surface.DrawTexturedRect(-16, -16, 32,32)
+		surface.DrawTexturedRect(-8, -8, 16,16)
     cam.End3D2D()
+	
+	local tab = ents.FindInSphere(self:GetPos(), DisFromCrate:GetInt())	
+
+	if table.HasValue(tab,LocalPlayer()) && !setHook then
+		local function drawPopUpText()
+			surface.CreateFont ("BankGothic Md BT", 20, 400, true, false, "MW2Font")			
+			local str = "a " .. reward;
+			if string.find(reward, "_") then
+				local sep = string.Explode("_", reward)
+				str = "a " .. sep[1] .. sep[2];
+			elseif reward == "ammo" then str = reward end			
+						
+			draw.SimpleText("Press and hold \"Use\" for " .. str, "MW2Font", ScrW()/2, ScrH()/2 + (height + offset), Color(255,255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
+		hook.Add("HUDPaint", "SupplyCrate_PopUpText", drawPopUpText)
+		setHook = true;
+	elseif !table.HasValue(tab,LocalPlayer()) then
+		hook.Remove("HUDPaint", "SupplyCrate_PopUpText")
+		setHook = false;
+	end
+	
 end 
 
 function getEntityWidthLengthHeight(ent) --The function returns a vector with width as the vector's x, length as the vector's y, and height as the vector's z.
@@ -74,4 +97,3 @@ function getEntityWidthLengthHeight(ent) --The function returns a vector with wi
     local offset=max-min
     return offset
 end
- 

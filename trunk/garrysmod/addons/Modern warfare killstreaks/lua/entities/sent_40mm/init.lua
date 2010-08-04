@@ -1,15 +1,13 @@
-
 include( 'shared.lua' )
+
+ENT.ExplosionSound = Sound("killstreak_explosions/105_explosion.wav")
 
 function ENT:PhysicsUpdate()
 	self.PhysObj:SetVelocity(self.Entity:GetForward() * 5500)
 end
 
-function ENT:Think()
- end
-
 function ENT:Initialize()	
-	self.Entity:SetModel( "models/military2/missile/missile_s300.mdl" ); --//  models/military2/bomb/bomb_mk82.mdl --// models/military2/bomb/bomb_jdam.mdl
+	self.Entity:SetModel( "models/military2/missile/missile_s300.mdl" );
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 	self.Entity:PhysicsInit( SOLID_VPHYSICS )
 	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )	
@@ -19,35 +17,26 @@ function ENT:Initialize()
 	if (self.PhysObj:IsValid()) then
 		self.PhysObj:Wake()
 	end
+	
+	self.Entity:EmitSound("ac-130_kill_sounds/40mminair.wav", 475, 100)
 end
 
 function ENT:PhysicsCollide( data, physobj )
 	if data.Speed > 50 and data.DeltaTime > 0.15 then
 		self:Explosion()
-		self.Entity:Remove()
+		self:Remove()
 	end
-
 end
-
 
 function ENT:OnTakeDamage( dmginfo )
 	self.Entity:TakePhysicsDamage( dmginfo )	
 end
 
-
-
 function ENT:Explosion()
-
-	local expl = ents.Create("env_explosion")
-	expl:SetOwner(self)
-	expl:SetKeyValue("spawnflags",128)
-	expl:SetKeyValue("spawnflags", "64")
-	expl:SetKeyValue("spawnflags", "256")
-	expl:SetKeyValue("iMagnitude", 200)
-	expl:SetKeyValue("iRadiusOverride", 1000)
-	expl:SetPos(self.Entity:GetPos())
-	expl:Spawn()
-	expl:Fire("explode","",0)
+	
+	util.BlastDamage(self, self.Owner, self:GetPos(), 250, 250)
+	
+	self:EmitSound(self.ExplosionSound, 70,100)
 	
 	ParticleExplode = ents.Create("info_particle_system")
 	ParticleExplode:SetPos(self:GetPos())
@@ -56,15 +45,5 @@ function ENT:Explosion()
 	ParticleExplode:Spawn()
 	ParticleExplode:Activate()
 	ParticleExplode:Fire("kill", "", 20) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.
-	
-	
---[[
-	local ar2Explo = ents.Create("env_ar2explosion")
-		ar2Explo:SetOwner(self)
-		ar2Explo:SetPos(self.Entity:GetPos())
-		ar2Explo:Spawn()
-		ar2Explo:Activate()
-		ar2Explo:Fire("Explode", "", 0)
-]]
 	util.ScreenShake( self.Entity:GetPos(), 15, 15, 0.5, 2000 )
 end

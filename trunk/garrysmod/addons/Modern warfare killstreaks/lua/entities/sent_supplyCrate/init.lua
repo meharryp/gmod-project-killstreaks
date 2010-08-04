@@ -10,7 +10,7 @@ ENT.Players = {}
 ENT.GiveReward = false;
 ENT.Reward = nil;
 ENT.Winner = nil;
-ENT.Model = Model("models/props_2fort/miningcrate001.mdl");
+ENT.Model = Model("models/deathdealer142/supply_crate/supply_crate.mdl");
 
 function ENT:Initialize()	
 	self.Owner = self:GetVar("owner")	
@@ -30,7 +30,6 @@ function ENT:Initialize()
 	self.m_tblToolsAllowed = string.Explode( " ", "none" )
 	
 	self.Reward = self:PickReward()
-	MsgN("Reward = " .. self.Reward)
 	self:SetNetworkedString("SupplyCrate_Reward", self.Reward) -- Have to use a network variable because the reward needs to be accessed from client side.
 end
 

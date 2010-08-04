@@ -62,7 +62,9 @@ function ENT:Explosion()
 	ParticleExplode:Spawn()
 	ParticleExplode:Activate()
 	ParticleExplode:Fire("kill", "", 20) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.
+	util.BlastDamage(self, self.Owner, self:GetPos(), 350, 350)
 	
+	--[[
 	local expl = ents.Create("env_explosion")
 	expl:SetOwner(self)
 	expl:SetKeyValue("spawnflags",128)
@@ -71,13 +73,6 @@ function ENT:Explosion()
 	expl:Spawn()
 	self:HitEffect()
 	expl:Fire("explode","",0)
-	--[[
-	local ar2Explo = ents.Create("env_ar2explosion")
-		ar2Explo:SetOwner(self)
-		ar2Explo:SetPos(self.Entity:GetPos())
-		ar2Explo:Spawn()
-		ar2Explo:Activate()
-		ar2Explo:Fire("Explode", "", 0)
 	]]
 	util.ScreenShake( self.Entity:GetPos(), 100, 100, 2, 5000 )
 end

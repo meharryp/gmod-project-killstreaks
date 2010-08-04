@@ -29,6 +29,7 @@ function ENT:Explode()
 	ParticleExplode:Activate()
 	ParticleExplode:Fire("kill", "", 20) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.
 	
+	self.Entity:EmitSound("weapons/explode3.wav", 400, 100)
 	self.Entity:Fire("kill", "", "0")
 end
 
