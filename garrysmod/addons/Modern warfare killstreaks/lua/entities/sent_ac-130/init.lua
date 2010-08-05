@@ -81,11 +81,11 @@ function ENT:PhysicsUpdate()
 					self.Max40mmShotDelay = CurTime() + 5
 					timer.Create("TimerStop40mmRel",5,1,function() self:StopReloadingForHUD("40mm") end)
 				end
-				self.DelayTime40mm = CurTime() + .5;
+				self.DelayTime40mm = CurTime() + .28;
 			elseif self.weapon == 2 && self.DelayTime25mm <= CurTime() && self.CoolDownTime25mm <= CurTime() then
 				self:Shoot25mm()
 				self.DelayTime25mm = CurTime() + .1
-				if self.BulletsShot >= 100 then
+				if self.BulletsShot >= 30 then
 					self.BulletsShot = 0;
 					self.Is25mmReloading = true
 					self.CoolDownTime25mm = CurTime() + 5;
