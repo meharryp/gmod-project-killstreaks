@@ -37,7 +37,7 @@ function ENT:Initialize()
 	hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );	
 	self.Owner = self:GetVar("owner")		
 	self.dropPos = self:GetVar("PackageDropZone", NULL) -- Needs to be set from the weapon
-	self.ground = findGround() + 6000;
+	self.ground = findGround() + 2000;
 	
 	x = findWall("x", self.ground)
 	self.spawnZone = Vector(x,self.dropPos.y,self.ground);
