@@ -31,6 +31,7 @@ function ENT:Initialize()
 	
 	self.Reward = self:PickReward()
 	self:SetNetworkedString("SupplyCrate_Reward", self.Reward) -- Have to use a network variable because the reward needs to be accessed from client side.
+	self:SetSkin( self.Owner:GetNetworkedString("MW2TeamSound") - 1 )
 end
 
 function ENT:PickReward()

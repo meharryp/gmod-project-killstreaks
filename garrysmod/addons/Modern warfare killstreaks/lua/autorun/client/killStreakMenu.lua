@@ -123,7 +123,7 @@ function MW2KillstreakChooseFrame()
 	end
 end
 
-local MW2Voices = {"Militia", "Navy seals", "Opfor", "US Marines", "TF 141"}
+local MW2Voices = {"Militia", "Navy seals", "Opfor", "US Rangers", "TF 141"}
 function MW2VoiceChooseFrame()
 
 	local DermaPanel = vgui.Create( "DFrame" )

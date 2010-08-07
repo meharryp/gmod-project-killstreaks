@@ -318,18 +318,19 @@ function screenContrastBHOT()
 end
 
 function UpdatePosAgl()
-	acHUDXPos = "Info"
-	acHUDYPos = "didn't"
-	acHUDAGL = "update."
-	timer.Simple(0.01, UpdatePosAglNumbers)
+	local sky = findGround() + 6000
+	local spawnPos = LocalPlayer():GetPos() + (LocalPlayer():GetForward() * 2000)
+	acHUDXPos = tostring(math.floor(spawnPos.x)+16384)
+	acHUDYPos = tostring(math.floor(spawnPos.y)+16384)
+	acHUDAGL = tostring(math.floor(sky)+16384)
 	timer.Create("refreshTimer",2,0, UpdatePosAglNumbers)
 end
+
 function UpdatePosAglNumbers()
 	acHUDXPos = tostring(math.floor(LocalPlayer():GetNetworkedInt("Ac_130_HUDXPos"))+16384)
 	acHUDYPos = tostring(math.floor(LocalPlayer():GetNetworkedInt("Ac_130_HUDYPos"))+16384)
-	acHUDAGL = tostring(math.floor(LocalPlayer():GetNetworkedInt("Ac_130_HUDAGL"))+360)
+	acHUDAGL = tostring(math.floor(LocalPlayer():GetNetworkedInt("Ac_130_HUDAGL"))+16384)
 end
-
 
 local DefMats = {}	-- The heat vision is curtisy of Teta_Bonita's x-ray vison script
 local DefClrs = {}
@@ -473,6 +474,44 @@ function PlayAC130KillSound(um)
 	if soundName != NULL then
 		surface.PlaySound("ac-130_kill_sounds/" .. soundName .. ".wav")
 	end
+end
+
+function findGround()
+
+	local minheight = -16384
+	local startPos = LocalPlayer():GetPos()
+	local endPos = Vector(0, 0,minheight);
+	local filterList = {LocalPlayer()}
+
+	local trace = {}
+	trace.start = startPos;
+	trace.endpos = endPos;
+	trace.filter = filterList;
+
+	local traceData;
+	local hitSky;
+	local hitWorld;
+	local bool = true;
+	local maxNumber = 0;
+	local groundLocation = -1;
+	while bool do
+		traceData = util.TraceLine(trace);
+		hitSky = traceData.HitSky;
+		hitWorld = traceData.HitWorld;
+		if hitWorld then
+			groundLocation = traceData.HitPos.z;			
+			bool = false;
+		else 
+			table.insert(filterList, traceData.Entity)
+		end
+			
+		if maxNumber >= 100 then
+			MsgN("Reached max number here, no luck in finding the ground");
+			bool = false;
+		end		
+	end
+	
+	return groundLocation;
 end
 
 function ErrorMessage()
