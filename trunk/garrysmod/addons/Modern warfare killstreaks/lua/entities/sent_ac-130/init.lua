@@ -47,7 +47,7 @@ function ENT:PhysicsUpdate()
 		self.Entity.Seat:SetAngles(self.ang)
 		self.HUDXPos = self:GetPos().x
 		self.HUDYPos = self:GetPos().y
-		self.HUDAGL = self:GetAngles().y
+		self.HUDAGL = self:GetPos().z
 		self.Owner:SetNetworkedInt("Ac_130_HUDXPos",self.HUDXPos)
 		self.Owner:SetNetworkedInt("Ac_130_HUDYPos",self.HUDYPos)
 		self.Owner:SetNetworkedInt("Ac_130_HUDAGL",self.HUDAGL)
