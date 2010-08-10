@@ -33,6 +33,7 @@ SWEP.CallOnce = true;
 SWEP.CalledIn = false;
 
 SWEP.PulledBack = false;
+SWEP.Used = false;
 
 local drawTime = 0;
 local drawBool = true;
@@ -92,15 +93,17 @@ function SWEP:Think()
 			ent:Spawn()
 			ent:Activate()
 			ent:GetPhysicsObject():ApplyForceCenter(self.Owner:GetAimVector() * 750)
+			self.Used = true;
 			self:Holster()
 		end
 	end
 end
 
 function SWEP:Holster()
-	if self != nil && self.Owner:HasWeapon(self:GetClass()) then
+	if self != nil && self.Used && self.Owner:HasWeapon(self:GetClass()) then
 		self.Owner:StripWeapon(self:GetClass());
 	end
+	return true
 end
 
 function SWEP:PrimaryAttack()
