@@ -1,0 +1,8 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/deathdealer142/supply_crate/crate"
+	"$surfaceprop" "metal"
+	"$model" 1
+}
+
+

@@ -1,0 +1,10 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/deathdealer142/supply_crate/seals"
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+	"$nolod" 1
+
+}
+
+
