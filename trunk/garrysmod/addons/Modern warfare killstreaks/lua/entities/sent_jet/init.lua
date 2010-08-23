@@ -2,7 +2,7 @@ AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 ENT.dropPos = NULL;
 local radius = 500;
-local jetModel = Model("models/harrier.mdl")
+local jetModel = Model("models/military2/air/air_f35_l.mdl")
 ENT.ground = 0;
 ENT.dropDelay = CurTime();
 ENT.droppedBombset1 = false;
@@ -72,28 +72,28 @@ function ENT:Initialize()
 	end
 
 	self.bomb = ents.Create( bombSent );
-	self.bomb:SetPos(self.Entity:GetPos() + (self.Entity:GetRight() * -83) + (self.Entity:GetUp() * -21) + (self.Entity:GetForward() * -16) ) 	
+	self.bomb:SetPos(self:GetPos() + (self:GetRight() * 99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
 	self.bomb:SetAngles(self.Entity:GetAngles());
 	self.bomb:SetVar("owner",self.Owner)
 	self.bomb:Spawn();
 	self.bomb:SetNotSolid(true);
 
 	self.bomb2 = ents.Create( bombSent );
-	self.bomb2:SetPos(self.Entity:GetPos() + (self.Entity:GetRight() * -139) + (self.Entity:GetUp() * -24) + (self.Entity:GetForward() * -41) )
+	self.bomb2:SetPos(self:GetPos() + (self:GetRight() * 144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
 	self.bomb2:SetAngles(self.Entity:GetAngles());
 	self.bomb2:SetVar("owner",self.Owner)
 	self.bomb2:Spawn()
 	self.bomb2:SetNotSolid(true);
 
 	self.bomb3 = ents.Create( bombSent );
-	self.bomb3:SetPos(self.Entity:GetPos() + (self.Entity:GetRight() * -168) + (self.Entity:GetUp() * -24) + (self.Entity:GetForward() * -41) )
+	self.bomb3:SetPos(self:GetPos() + (self:GetRight() * -99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
 	self.bomb3:SetAngles(self.Entity:GetAngles());
 	self.bomb3:SetVar("owner",self.Owner)
 	self.bomb3:Spawn()
 	self.bomb3:SetNotSolid(true);
 
 	self.bomb4 = ents.Create( bombSent );
-	self.bomb4:SetPos(self.Entity:GetPos() + (self.Entity:GetRight() * 83) + (self.Entity:GetUp() * -21) + (self.Entity:GetForward() * -16) ) 
+	self.bomb4:SetPos(self:GetPos() + (self:GetRight() * -144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
 	self.bomb4:SetAngles(self.Entity:GetAngles());
 	self.bomb4:SetVar("owner",self.Owner)
 	self.bomb4:Spawn()	

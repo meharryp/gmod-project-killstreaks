@@ -121,31 +121,26 @@ function useKillStreak(player, command, arguments ) -- command for the user to u
 	remaingKillStreaks = table.Count(player.killStreaks)	
 	
 	if remaingKillStreaks > 0 then	
+	
+		local val = player.killStreaks[remaingKillStreaks];
+		
+		if val == "ac-130" || val == "predator_missile" then 
+			if !FindSky(player) then
+				umsg.Start("ShowKillstreakSpawnError", player);
+				umsg.End()
+				return;
+			end
+		end
+	
 		streak = table.remove(player.killStreaks)
 		player:SetNetworkedString("UsedKillStreak",streak)
 		player:Give(streak);
-		--[[
-		umsg.Start("RemoveUsedKillStreak", player);
-		umsg.End();
-	]]
 	end
 	killStr = player.killStreaks[remaingKillStreaks-1]
 	player:SetNetworkedString("AddKillStreak", tostring(killStr))
 
 end
---[[
-function damageInfo(ent, inflictor, attacker, amount, dmginfo) -- Allows the correct kill icon to be drawn for the explosive.
-	if( dmginfo:IsExplosionDamage() && ((attacker:GetClass() == "sent_predator_missile" && ent:GetClass() != "sent_predator_missile") || (attacker:GetClass() == "sent_bomblet" && ent:GetClass() != "sent_bomblet") || (attacker:GetClass() == "sent_air_strike_bomb" && ent:GetClass() != "sent_air_strike_bomb") || (attacker:GetClass() == "sent_105mm" && ent:GetClass() != "sent_105mm") || (attacker:GetClass() == "sent_40mm" && ent:GetClass() != "sent_40mm") )) then 
-		MsgN("Attacker = " .. ent:GetClass() )
-		dmginfo:SetInflictor(inflictor:GetOwner())
-		dmginfo:SetAttacker(attacker.Owner)
-	elseif ( inflictor:GetClass() == "sent_predator_missile" ) then 
-		MsgN("Preadtor missile killer")
-		dmginfo:SetAttacker(inflictor.Owner)
-	end
-	
-end
-]]
+
 function setKillstreaks( pl, handler, id, encoded, decoded )
 	if pl.FirstSpawn then
 		pl.curKillstreaks = decoded;
@@ -178,3 +173,43 @@ concommand.Add( "Use_KillStreak", useKillStreak )
 hook.Add("PlayerInitialSpawn" ,"SetUpKillStreakCounter", playerJoin)
 hook.Add( "PlayerDeath", "ResetKillStreak", playerDies )
 hook.Add("OnNPCKilled", "AddKillsToKillStrreak", npcDeath)
+
+function FindSky(player)
+	local pos = player:GetPos();
+	local maxheight = 16384
+	local startPos = pos;
+	local endPos = Vector(pos.x, pos.y, maxheight);
+	local filterList = {player}
+
+	local trace = {}
+	trace.start = startPos;
+	trace.endpos = endPos;
+	trace.filter = filterList;
+
+	local traceData;
+	local hitSky;
+	local hitWorld;
+	local bool = true;
+	local num = 0;
+	local foundSky = false;
+	while bool do
+		traceData = util.TraceLine(trace);
+		hitSky = traceData.HitSky;
+		hitWorld = traceData.HitWorld;
+		if hitSky then
+			foundSky = true;
+			bool = false;
+		elseif hitWorld then
+			trace.start = traceData.HitPos + Vector(0,0,50);
+		else 
+			table.insert(filterList, traceData.Entity)
+		end
+			
+		if num >= 300 then			
+			bool = false;
+		end
+		num = num + 1
+	end
+	
+	return foundSky;
+end

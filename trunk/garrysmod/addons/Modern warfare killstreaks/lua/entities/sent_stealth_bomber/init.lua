@@ -61,14 +61,17 @@ function ENT:PhysicsUpdate()
 			self.FlyAng = Angle(0,self.MarkerAng,0)
 			
 			self.Owner:SetViewEntity(self.Owner);
-			self.Owner:SetSuppressPickupNotices( true )
+			//self.Owner:SetSuppressPickupNotices( true )
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+			--[[
 			for k,v in pairs(self.playerWeapons) do
 				if v != "stealth_bomber" then
 					self.Owner:Give(v);	
 				end		
 			end
 			self.Owner:SetSuppressPickupNotices( false )
+			]]
+			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Stealth_bomber_RemoveHUD", self.Owner);
 			umsg.End();
@@ -119,15 +122,17 @@ function ENT:Initialize()
 	end
 	
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+	self.Wep = self:GetVar("Weapon")
 	self.MarkerAng = 0;
 	self.Owner:SetNetworkedInt("StealthMarkerAngle",self.MarkerAng);
 	self.playerAng = self.Owner:GetAngles();
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	--[[
 	for k,v in pairs(self.Owner:GetWeapons()) do
 		self.playerWeapons[k] = v:GetClass()
 	end	
 	self.Owner:StripWeapons();
-	
+	]]
 	self.Owner:SetViewEntity(self.Entity);	
 	
 	umsg.Start("Stealth_bomber_SetUpHUD", self.Owner);

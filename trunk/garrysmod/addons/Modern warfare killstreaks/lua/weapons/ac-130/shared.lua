@@ -3,12 +3,8 @@ if ( CLIENT ) then
 	SWEP.PrintName			= "AC-130"
 end
 
+SWEP.UseLaptop = true;
 SWEP.Base 				= "mw2_killstreak_base"
 SWEP.AdminSpawnable		= true
+SWEP.Ent = "sent_ac-130"
 
-function SWEP:Run()
-	local ac = ents.Create("sent_ac-130")
-	ac:SetVar("owner",self.Owner)	
-	ac:Spawn()
-	ac:Activate()
-end

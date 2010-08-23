@@ -52,16 +52,19 @@ function ENT:PhysicsUpdate()
 			self.findHoverZone = false;
 			Vector( self:GetPos().x, self:GetPos().y, self:findGround() )
 			
-			self.Owner:ExitVehicle()
-			self.Owner:SetSuppressPickupNotices( true );
+			//self.Owner:ExitVehicle()
+			//self.Owner:SetSuppressPickupNotices( true );
 			self.Owner:SetViewEntity(self.Owner);
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+			--[[
 			for k,v in pairs(self.playerWeapons) do
 				if v != "harrier" then
 					self.Owner:Give(v);	
 				end	
 			end
-			self.Owner:SetSuppressPickupNotices( false )
+			]]
+			//self.Owner:SetSuppressPickupNotices( false )
+			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Harrier_Strike_RemoveHUD", self.Owner);
 			umsg.End();
@@ -118,6 +121,7 @@ function ENT:Initialize()
 	end
 	
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+	self.Wep = self:GetVar("Weapon")	
 	self.playerAng = self.Owner:GetAngles();
 	
 	self.Jet1 = ents.Create("sent_jet")
@@ -130,11 +134,12 @@ function ENT:Initialize()
 	self.Harrier:SetVar("owner",self.Owner) 
 
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	--[[
 	for k,v in pairs(self.Owner:GetWeapons()) do
 		self.playerWeapons[k] = v:GetClass()
 	end	
 	self.Owner:StripWeapons();
-	
+	]]
 	self.Owner:SetViewEntity(self.Entity);
 	self.Owner:SetNetworkedString("harrier_Killsteak", "none")
 	umsg.Start("Harrier_Strike_SetUpHUD", self.Owner);

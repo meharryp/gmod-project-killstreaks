@@ -62,12 +62,14 @@ function ENT:PhysicsUpdate()
 			self.Owner:SetViewEntity(self.Owner);
 			
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+			--[[
 			for k,v in pairs(self.playerWeapons) do
 				if v != "precision_airstrike" then
 					self.Owner:Give(v);	
 				end			
 			end
-			
+			]]
+			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Precision_Strike_RemoveHUD", self.Owner);
 			umsg.End();
@@ -137,6 +139,7 @@ function ENT:Initialize()
 	end
 	
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+	self.Wep = self:GetVar("Weapon")
 	self.MarkerAng = 0;
 	self.Owner:SetNetworkedInt("AirstrikeMarkerAngle",self.MarkerAng);
 	self.playerAng = self.Owner:GetAngles();
@@ -151,11 +154,12 @@ function ENT:Initialize()
 	self.Jet3:SetVar("owner",self.Owner) 
 	
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	--[[
 	for k,v in pairs(self.Owner:GetWeapons()) do
 		self.playerWeapons[k] = v:GetClass()
 	end	
 	self.Owner:StripWeapons();
-	
+	]]
 	self.Owner:SetViewEntity(self.Entity);		
 	
 	umsg.Start("Precision_Strike_SetUpHUD", self.Owner);

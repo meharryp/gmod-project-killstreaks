@@ -78,7 +78,7 @@ function ENT:Draw()
 			local str = "a " .. reward;
 			if string.find(reward, "_") then
 				local sep = string.Explode("_", reward)
-				str = "a " .. sep[1] .. sep[2];
+				str = "a " .. sep[1] .. " " .. sep[2];
 			elseif reward == "ammo" then str = reward end			
 						
 			draw.SimpleText("Press and hold \"Use\" for " .. str, "MW2Font", ScrW()/2, ScrH()/2 + (height + offset), Color(255,255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
