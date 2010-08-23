@@ -36,7 +36,7 @@ local function drawAC130HUD()
 	elseif ac130weapon == 1 then
 		sen = LocalPlayer():GetFOV() / 105;
 	else
-		sen = LocalPlayer():GetFOV() / 120;
+		sen = LocalPlayer():GetFOV() / 100;
 	end
 	LocalPlayer():GetActiveWeapon().MouseSensitivity = sen
 

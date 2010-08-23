@@ -25,12 +25,32 @@ end
 function playAC130Deploy()
 	surface.PlaySound("killstreak_rewards/ac-130_inbound" .. LocalPlayer():GetNetworkedString("MW2TeamSound") .. ".wav")
 end
+
+function killstreakSpawnError()
+	local DLabel1
+	local ACE
+
+	ACE = vgui.Create('DFrame')
+	ACE:SetSize(357, 66)
+	ACE:Center()
+	ACE:SetTitle('Killstreak Error')
+	ACE:SetBackgroundBlur(true)
+	ACE:MakePopup()
+
+	DLabel1 = vgui.Create('DLabel')
+	DLabel1:SetParent(ACE)
+	DLabel1:SetPos(18, 35)
+	DLabel1:SetText("You can't use the aquired killstreak here, Reason: Not enough room")
+	DLabel1:SizeToContents()
+end
+
 usermessage.Hook("playPredatorMissileDeploySound", playPredatorMissileDeploy)
 usermessage.Hook("playPredatorMissileInboundSound", playPredatorMissileInbound)
 usermessage.Hook("playHarrierLaptopDeploySound", playHarrierLaptopDeploy)
 usermessage.Hook("playHarrierInboundSound", playHarrierInbound)
 usermessage.Hook("playPrecisionAirstrikeInboundSound", playPrecisionAirstrikeInbound)
 usermessage.Hook("playAC130DeploySound", playAC130Deploy)
+usermessage.Hook("ShowKillstreakSpawnError", killstreakSpawnError)
 
 killicon.Add("sent_predator_missile","vgui/killicons/predator_missile",Color ( 255, 255, 255, 255 ) )
 killicon.Add("sent_air_strike_bomb","vgui/killicons/precision_air_strike",Color ( 255, 255, 255, 255 ) ) 

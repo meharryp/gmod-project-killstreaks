@@ -11,6 +11,7 @@ ENT.playerAng = NULL;
 ENT.playerWeapons = {};
 ENT.Sky = 0;
 ENT.ang = nil;
+ENT.turnDelay = CurTime();
 local missileThrustSound = Sound("killstreak_rewards/predator_missile_thruster.wav")
 local missileBoostSound = Sound("killstreak_rewards/predator_missile_boost.wav")
 local missileExplosionSound = Sound("killstreak_rewards/predator_missile_explosion.wav")
@@ -23,11 +24,11 @@ function ENT:PhysicsUpdate()
 	
 	if self.Entity.Owner:KeyDown( IN_FORWARD ) then --IN_FORWARD
 		if self.ang.p > 60 then
-			self.ang =  Angle( self.ang.p - self.moveFactor, self.ang.y, self.ang.r )
+			self.ang =  Angle( self.ang.p - self.moveFactor, self.ang.y, self.ang.r )		
 		end
 	elseif self.Owner:KeyDown( IN_BACK ) then
 		if self.ang.p < 89 then
-			self.ang =  Angle( self.ang.p + self.moveFactor, self.ang.y, self.ang.r )
+			self.ang =  Angle( self.ang.p + self.moveFactor, self.ang.y, self.ang.r )			
 		end
 	end	
 	if self.Entity.Owner:KeyDown( IN_MOVERIGHT ) then
@@ -66,6 +67,7 @@ function ENT:Initialize()
 	self.Sky = self.Sky - 100;
 
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+	self.Wep = self:GetVar("Weapon")
 	local lplPos = self.Owner:GetPos()
 	local skyVector = Vector(lplPos.x,lplPos.y, self.Sky);
 	self.speedFactor = 1;
@@ -86,15 +88,9 @@ function ENT:Initialize()
 	end	
 	
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
-	
-	for k,v in pairs(self.Owner:GetWeapons()) do
-		self.playerWeapons[k] = v:GetClass()
-	end	
-	self.Owner:StripWeapons();
-	
 	self.playerAng = self.Owner:GetAngles();
 		
-	self.Owner:SetViewEntity(self.Entity);
+	self.Owner:SetViewEntity(self);
 	umsg.Start("Predator_missile_SetUpHUD", self.Owner);
 	umsg.End()
 	umsg.Start("playPredatorMissileInboundSound", self.Owner);
@@ -108,18 +104,10 @@ function ENT:PhysicsCollide( data, physobj )
 		self.Owner:SetViewEntity(self.Owner)
 		self.Owner:ExitVehicle()
 		self.Owner:SetAngles(self.playerAng)
-		self.Owner:SetSuppressPickupNotices( true )
 		GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
-		
-		for k,v in pairs(self.playerWeapons) do
-			if v != "predator_missile" then
-				self.Owner:Give(v);	
-			end
-		end
-		self.Owner:SetSuppressPickupNotices( false )
-		//timer.Simple(1, self.Owner.SetSuppressPickupNotices, self.Owner, false)
 		umsg.Start("Predator_missile_RemoveHUD", self.Owner);
 		umsg.End();
+		self.Wep:CallIn();
 	end
 end
 

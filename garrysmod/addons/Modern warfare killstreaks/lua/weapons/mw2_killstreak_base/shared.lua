@@ -9,11 +9,7 @@ if ( CLIENT ) then
 	SWEP.SlotPos			= 5		
 end
 
-if ModelExsists then
-	SWEP.ViewModelFlip		= true
-	SWEP.ViewModel			= "models/weapons/v_slam.mdl"
-	SWEP.WorldModel			= "models/weapons/w_slam.mdl"
-end
+SWEP.UseLaptop = false
 
 SWEP.Spawnable			= false
 SWEP.AdminSpawnable		= false
@@ -37,15 +33,28 @@ SWEP.CallOnce = true;
 
 SWEP.CalledIn = false;
 
-local drawTime = 0;
-local drawBool = true;
-local detonateTime = 0;
-local detonateBool = false;
-local holsterTime = 0;
-local holsterBool = false;
-local drawSequence;
-local detonateSequence;
-local holsterSequence;
+SWEP.Ent = "";
+
+SWEP.drawTime = 0;
+SWEP.drawBool = true;
+SWEP.detonateTime = 0;
+SWEP.detonateBool = false;
+SWEP.holsterTime = 0;
+SWEP.holsterBool = false;
+SWEP.drawSequence = nil;
+SWEP.detonateSequence = nil;
+SWEP.holsterSequence = nil;
+
+function SWEP:Initialize()
+	if ModelExsists && !self.UseLaptop then
+		self.ViewModelFlip		= true
+		self.ViewModel			= "models/weapons/v_slam.mdl"
+		self.WorldModel			= "models/weapons/w_slam.mdl"
+	elseif self.UseLaptop then
+		self.ViewModelFlip		= false
+		self.ViewModel			= "models/deathdealer142/laptop/v_laptop.mdl"
+	end
+end
 
 function SWEP:Equip(NewOwner)
 	NewOwner:SelectWeapon(self:GetClass())	
@@ -63,48 +72,61 @@ function SWEP:Deploy()
 	end
 	self.Owner:SetNetworkedString("UsedKillStreak", "")
 	
-	if ModelExsists then
-		drawTime = 0;
-		drawBool = true;
-		detonateTime = 0;
-		detonateBool = false;
-		holsterTime = 0;
-		holsterBool = false;
-
-		drawSequence = self:LookupSequence("detonator_draw")
-		detonateSequence = self:LookupSequence("detonator_detonate")
-		holsterSequence = self:LookupSequence("detonator_holster")
-
-		self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_DRAW)
-		drawTime = self:SequenceDuration() + CurTime();
-		self:PlaySound();
+	if self.UseLaptop then		
+		self.drawSequence = self:LookupSequence("open")
+		self.holsterSequence = self:LookupSequence("close")
+		self.Weapon:SendWeaponAnim(ACT_VM_DRAW)
+		self.drawTime = self:SequenceDuration() + CurTime();
 	else
-		if self.CallOnce then
-			timer.Simple(1, self, self.Run);
-			self.CalledIn = true;
-			self:Holster();
-			self.CallOnce = false;			
+		if ModelExsists then
+			self.drawSequence = self:LookupSequence("detonator_draw")
+			self.detonateSequence = self:LookupSequence("detonator_detonate")
+			self.holsterSequence = self:LookupSequence("detonator_holster")
+
+			self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_DRAW)
+			self.drawTime = self:SequenceDuration() + CurTime();
+			self:PlaySound();
+		else
+			if self.CallOnce then
+				timer.Simple(1, self, self.Run);
+				self.CalledIn = true;
+				self:Holster();
+				self.CallOnce = false;			
+			end
 		end
 	end
 	return true;
 end
 
 function SWEP:Think()
-	if ModelExsists then
-		if self:GetSequence() == drawSequence && CurTime() > drawTime && drawBool then
-			self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_DETONATE)
-			detonateTime = self:SequenceDuration( ) + CurTime();
-			drawBool = false;
-			detonateBool = true;			
+	if self.UseLaptop then
+		if self:GetSequence() == self.drawSequence && CurTime() > self.drawTime && self.drawBool then
+			self.drawBool = false;
 			self:Run();
-			self.CalledIn = true;
-		elseif self:GetSequence() == detonateSequence && CurTime() > detonateTime && detonateBool then
-			self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_HOLSTER)
-			holsterTime = self:SequenceDuration( ) + CurTime();
-			detonateBool = false;
-			holsterBool = true;		
-		elseif self:GetSequence() == holsterSequence && CurTime() > holsterTime && holsterBool then			
+		elseif self.CalledIn && !self.holsterBool then
+			self.Weapon:SendWeaponAnim(ACT_VM_HOLSTER)
+			self.holsterTime = self:SequenceDuration( ) + CurTime();
+			self.holsterBool = true;	
+		elseif self:GetSequence() == self.holsterSequence && CurTime() > self.holsterTime && self.holsterBool then			
 			self:Holster();			
+		end
+	else
+		if ModelExsists then
+			if self:GetSequence() == self.drawSequence && CurTime() > self.drawTime && self.drawBool then
+				self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_DETONATE)
+				self.detonateTime = self:SequenceDuration( ) + CurTime();
+				self.drawBool = false;
+				self.detonateBool = true;			
+				self:Run();
+				self.CalledIn = true;
+			elseif self:GetSequence() == self.detonateSequence && CurTime() > self.detonateTime && self.detonateBool then
+				self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_HOLSTER)
+				self.holsterTime = self:SequenceDuration( ) + CurTime();
+				self.detonateBool = false;
+				self.holsterBool = true;		
+			elseif self:GetSequence() == self.holsterSequence && CurTime() > self.holsterTime && self.holsterBool then			
+				self:Holster();			
+			end
 		end
 	end
 end
@@ -116,6 +138,11 @@ function SWEP:Holster()
 end
 
 function SWEP:Run()
+	local ent = ents.Create(self.Ent)
+	ent:SetVar("owner",self.Owner)
+	ent:SetVar("Weapon",self)	
+	ent:Spawn()
+	ent:Activate()
 end
 
 function SWEP:PlaySound()
@@ -125,4 +152,8 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+end
+
+function SWEP:CallIn()
+	self.CalledIn = true;
 end

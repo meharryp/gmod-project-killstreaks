@@ -27,6 +27,7 @@ ENT.StayAlive = true;
 ENT.rotateAroundPlayer = true;
 ENT.playerPos = NULL;
 ENT.disFromPl = 3000;
+ENT.PlayerAng = NULL;
 //local DisFromPlayer = CreateConVar ("AC130DisFromPl", "3000")
 //local DelayForTurn = CreateConVar ("AC130TurnDelay", ".2")
 //local AngleInc = CreateConVar ("AC130AngInc", "1")
@@ -160,7 +161,9 @@ function ENT:Think()
 
 function ENT:Initialize()	
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+	self.Wep = self:GetVar("Weapon")
 	self.playerPos = self.Owner:GetPos();
+	self.PlayerAng = self.Owner:GetAngles();
 	self.sky = self:findGround()
 	
 	if self.sky == -1 then 
@@ -353,7 +356,8 @@ function ENT:RemoveAC130()
 	self.StayAlive = false;
 	constraint.NoCollide( self, GetWorldEntity(), 0, 0 );	
 	self.Owner:GetActiveWeapon().MouseSensitivity = 1;
-	//self:Remove();
+	self.Wep:CallIn();
+	self.Owner:SetAngles(self.PlayerAng);
 end
 
 function ENT:UpdateReloadingStates()
