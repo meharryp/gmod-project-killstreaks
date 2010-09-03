@@ -23,6 +23,9 @@ end
 function npcDeath( victim, killer, weapon )   -- since an npc can be easyer to kill then a player, it takes more kills of NPCs to add to one kill against a player	
 	if enableKillStreaks:GetInt() != 1 then return end
 	if killer:IsPlayer() && checkNPC(victim) then 
+		if weapon:GetVar("FromCarePackage",false) then
+			return;
+		end
 		if victim:GetClass() == "npc_antlionguard" || victim:GetClass() == "npc_strider" then
 			killer.plKills = killer.plKills + 1;
 			checkKills(killer);
@@ -55,6 +58,10 @@ function playerDies( victim, weapon, killer )
 		umsg.End();
 	end
 	if enableKillStreaks:GetInt() != 1 then return end -- if the admin chooses not to allow this mod to work then it will end here
+	
+	if weapon:GetVar("FromCarePackage",false) then
+		return;
+	end
 	
 	if killer:IsPlayer() && killer != victim then		-- Increments the killers kills by 1
 		killer.plKills = killer.plKills + 1;
@@ -96,12 +103,16 @@ function canUseStreak(ply, streak)
 end
 
 function addKillStreak(ply, str)
+	addKillStreak(ply, str, false)
+end
+
+function addKillStreak(ply, str, isCare)
 	if str == "ammo" then
 		giveAmmo(ply);
 		return;
 	end
 	ply:SetNetworkedString("AddKillStreak", str)
-	table.insert(ply.killStreaks, str)
+	table.insert(ply.killStreaks, {str, isCare})
 	umsg.Start("AddKillStreak", ply);
 	umsg.End();
 end
@@ -118,11 +129,11 @@ function giveAmmo(pl)
 end
 
 function useKillStreak(player, command, arguments ) -- command for the user to use the kill streaks they have aquired.
-	remaingKillStreaks = table.Count(player.killStreaks)	
+	local remaingKillStreaks = table.Count(player.killStreaks)	
 	
 	if remaingKillStreaks > 0 then	
 	
-		local val = player.killStreaks[remaingKillStreaks];
+		local val = player.killStreaks[remaingKillStreaks][1];
 		
 		if val == "ac-130" || val == "predator_missile" then 
 			if !FindSky(player) then
@@ -132,12 +143,19 @@ function useKillStreak(player, command, arguments ) -- command for the user to u
 			end
 		end
 	
-		streak = table.remove(player.killStreaks)
+		local tab = table.remove(player.killStreaks)
+		local streak = tab[1];
+		local isCare = tab[2];
 		player:SetNetworkedString("UsedKillStreak",streak)
+		player:SetNetworkedBool("IsKillStreakFromCarePackage",isCare)
 		player:Give(streak);
 	end
-	killStr = player.killStreaks[remaingKillStreaks-1]
-	player:SetNetworkedString("AddKillStreak", tostring(killStr))
+	local killStr = player.killStreaks[remaingKillStreaks-1]
+	if killStr != nil then
+		player:SetNetworkedString("AddKillStreak", tostring(killStr[1]))
+	else
+		player:SetNetworkedString("AddKillStreak", "none")
+	end
 
 end
 

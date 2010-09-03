@@ -72,6 +72,9 @@ function SWEP:Deploy()
 	end
 	self.Owner:SetNetworkedString("UsedKillStreak", "")
 	
+	self.FromCare = self.Owner:GetNetworkedBool("IsKillStreakFromCarePackage",false)
+	self.Owner:SetNetworkedBool("IsKillStreakFromCarePackage",false)
+	
 	if self.UseLaptop then		
 		self.drawSequence = self:LookupSequence("open")
 		self.holsterSequence = self:LookupSequence("close")
@@ -141,6 +144,7 @@ function SWEP:Run()
 	local ent = ents.Create(self.Ent)
 	ent:SetVar("owner",self.Owner)
 	ent:SetVar("Weapon",self)	
+	ent:SetVar("FromCarePackage", self.FromCare)
 	ent:Spawn()
 	ent:Activate()
 end

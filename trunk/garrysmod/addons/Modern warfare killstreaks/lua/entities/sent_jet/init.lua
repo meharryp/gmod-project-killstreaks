@@ -1,5 +1,8 @@
 AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
+
+local flyBySound = Sound("killstreak_misc/jet_fly_by.wav");
+
 ENT.dropPos = NULL;
 local radius = 500;
 local jetModel = Model("models/military2/air/air_f35_l.mdl")
@@ -36,7 +39,7 @@ function ENT:PhysicsUpdate()
 end
 
 function ENT:Initialize()	
-	hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );
+	//hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );
 	local bombSent = "sent_air_strike_cluster"
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 	self.StartPos = self:GetVar("WallLocation", NULL);
@@ -75,6 +78,7 @@ function ENT:Initialize()
 	self.bomb:SetPos(self:GetPos() + (self:GetRight() * 99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
 	self.bomb:SetAngles(self.Entity:GetAngles());
 	self.bomb:SetVar("owner",self.Owner)
+	self.bomb:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	self.bomb:Spawn();
 	self.bomb:SetNotSolid(true);
 
@@ -82,6 +86,7 @@ function ENT:Initialize()
 	self.bomb2:SetPos(self:GetPos() + (self:GetRight() * 144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
 	self.bomb2:SetAngles(self.Entity:GetAngles());
 	self.bomb2:SetVar("owner",self.Owner)
+	self.bomb2:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	self.bomb2:Spawn()
 	self.bomb2:SetNotSolid(true);
 
@@ -89,6 +94,7 @@ function ENT:Initialize()
 	self.bomb3:SetPos(self:GetPos() + (self:GetRight() * -99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
 	self.bomb3:SetAngles(self.Entity:GetAngles());
 	self.bomb3:SetVar("owner",self.Owner)
+	self.bomb3:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	self.bomb3:Spawn()
 	self.bomb3:SetNotSolid(true);
 
@@ -96,6 +102,7 @@ function ENT:Initialize()
 	self.bomb4:SetPos(self:GetPos() + (self:GetRight() * -144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
 	self.bomb4:SetAngles(self.Entity:GetAngles());
 	self.bomb4:SetVar("owner",self.Owner)
+	self.bomb4:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	self.bomb4:Spawn()	
 	self.bomb4:SetNotSolid(true);
 
@@ -113,6 +120,11 @@ function ENT:Initialize()
 	constraint.Weld(self.Entity, self.bomb4, 0,0,0, bool)
 	
 	constraint.NoCollide( self.Entity, GetWorldEntity(), 0, 0 );	
+	self.PhysgunDisabled = true
+	self.bomb.PhysgunDisabled = true
+	self.bomb2.PhysgunDisabled = true
+	self.bomb3.PhysgunDisabled = true
+	self.bomb4.PhysgunDisabled = true
 end
 
 function ENT:OnTakeDamage( dmginfo )
@@ -141,6 +153,7 @@ function ENT:DropBomb()
 		self.bomb2:SetVar("HasBeenDropped",true);
 		
 		self.droppedBombset1 = true;
+		self:EmitSound(flyBySound, 200, 100)
 	elseif !self.droppedBombset2 then
 		constraint.RemoveConstraints(self.bomb3, "Weld")
 		constraint.RemoveConstraints(self.bomb4, "Weld")

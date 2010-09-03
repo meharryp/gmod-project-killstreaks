@@ -90,8 +90,9 @@ function ENT:Initialize()
 
 	self.crate = ents.Create( "sent_supplyCrate" );
 	self.crate:SetPos( self:GetPos() + (self:GetRight() * 1) + (self:GetUp() * -64) + (self:GetForward() * 8.5) )
-	self.crate:SetAngles(self.Entity:GetAngles() + Angle(0,90,0));
+	self.crate:SetAngles(self.Entity:GetAngles() + Angle(0,90,0));	
 	self.crate:SetVar("owner",self.Owner)
+	self.crate:SetVar("IsSentry",self:GetVar("IsSentry", false))
 	self.crate:Spawn();
 	self.crate:GetPhysicsObject():EnableGravity(false)
 	self.crate:SetNotSolid(true);

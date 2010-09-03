@@ -164,10 +164,10 @@ function ENT:Initialize()
 	self.Wep = self:GetVar("Weapon")
 	self.playerPos = self.Owner:GetPos();
 	self.PlayerAng = self.Owner:GetAngles();
+	
 	self.sky = self:findGround()
 	
 	if self.sky == -1 then 
-	MsgN("Could not find the sky, please try again")
 		return;
 	end
 	self.sky = self.sky + 6000;	
@@ -209,7 +209,6 @@ function ENT:Initialize()
 	local vec3 = lplPos - spawnPos
 	local ang = vec3:Angle()
 	
-	//self.Entity:SetAngles(Angle(0,ang.y ,0))
 	self.Entity:SetAngles(Angle(0,self.Owner:GetAngles().y - 90,0))
 	
 	self.ang = self:GetAngles();
@@ -238,8 +237,7 @@ function ENT:Initialize()
 	self.Entity.Seat:SetAngles(self.ang)
 	self.Entity.Seat:SetColor(255,255,255,0)
 	self.Entity.Seat:Spawn()
-	
-	self.playerAng = self.Owner:GetAngles();
+		
 	self.Owner:EnterVehicle(self.Entity.Seat);
 	self.Owner:SetViewEntity(self.camera);
 	
@@ -268,6 +266,7 @@ function ENT:FireMissile(target, weaponType)
 	self.missile:SetPos(self:GetPos())  
 	self.missile:SetAngles(target:Angle())
 	self.missile:SetVar("owner",self.Owner)	
+	self.missile:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	self.missile:Spawn()
 	self:EmitSound(missileSound)
 	constraint.NoCollide( self, self.missile, 0, 0 );

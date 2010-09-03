@@ -4,10 +4,6 @@ include('shared.lua')
 
 ENT.FireOnce = true;
 
-function ENT:Activate()
-
-end
-
 function ENT:Freeze()
 	self.Entity:SetMoveType(MOVETYPE_NONE)
 end
@@ -26,6 +22,7 @@ function ENT:Explode()
 		
 		bomblet:SetPos(self.Entity:GetPos())
 		bomblet:SetVar("owner",self.Owner);
+		bomblet:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 		bomblet:Spawn()
 				
 		local Phys = bomblet:GetPhysicsObject()
@@ -36,11 +33,7 @@ function ENT:Explode()
 		end
 	end
 	
-	//self.Entity:Fire("kill", "", "0.2")
 	self.Entity:Remove();
-end
-
-function ENT:OnRemove()
 end
 
 function ENT:Think()
@@ -48,9 +41,6 @@ function ENT:Think()
 		timer.Simple(1.5, self.Explode, self)
 		self.FireOnce = false;
 	end
-end
-
-function ENT:OnTakeDamage(Dmg)
 end
 
 function ENT:Initialize()

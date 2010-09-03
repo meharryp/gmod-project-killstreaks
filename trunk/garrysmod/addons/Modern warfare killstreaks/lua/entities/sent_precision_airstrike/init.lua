@@ -78,6 +78,7 @@ function ENT:PhysicsUpdate()
 			self.Jet1:SetVar("JetDropZone", self:FindDropZone1())
 			self.Jet1:SetVar("WallLocation", self.WallLoc)
 			self.Jet1:SetVar("FlyAngle", self.FlyAng)
+			self.Jet1:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Jet1:Spawn()
 			self.Jet1:Activate()
 			self.SpawnDelay = CurTime() + 2;
@@ -104,6 +105,7 @@ function ENT:PhysicsUpdate()
 			self.Jet2:SetVar("JetDropZone", self.Entity:GetPos())
 			self.Jet2:SetVar("WallLocation", self.WallLoc)
 			self.Jet2:SetVar("FlyAngle", self.FlyAng)
+			self.Jet2:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Jet2:Spawn();
 			self.Jet2:Activate();
 			self.SpawnDelay = CurTime() + 2;
@@ -112,6 +114,7 @@ function ENT:PhysicsUpdate()
 			self.Jet3:SetVar("JetDropZone", self:FindDropZone3())
 			self.Jet3:SetVar("WallLocation", self.WallLoc)
 			self.Jet3:SetVar("FlyAngle", self.FlyAng)
+			self.Jet3:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Jet3:Spawn();
 			self.Jet3:Activate();
 			self.removeSelf = true;
@@ -154,12 +157,7 @@ function ENT:Initialize()
 	self.Jet3:SetVar("owner",self.Owner) 
 	
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
-	--[[
-	for k,v in pairs(self.Owner:GetWeapons()) do
-		self.playerWeapons[k] = v:GetClass()
-	end	
-	self.Owner:StripWeapons();
-	]]
+
 	self.Owner:SetViewEntity(self.Entity);		
 	
 	umsg.Start("Precision_Strike_SetUpHUD", self.Owner);
@@ -263,5 +261,3 @@ function ENT:FindDropZone3()
 	return trace.HitPos;
 end
 
-function ENT:OnRemove( )
-end
