@@ -138,7 +138,6 @@ function ENT:Initialize()
 	self.curTarget = nil;
 	self.setPos = true;
 	
-	//hook.Add( "PhysgunPickup", "DenieHarrierPickup", physgunHarrierPickup );
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 
 --	self.hoverPos = self.Owner:GetNetworkedVector("Hover_zone_vector");	
@@ -199,7 +198,6 @@ function ENT:FindEnemys()
 	end
 	if table.Count(enemys) >= 1 then
 		self.curTarget = table.Random(enemys);
-		MsgN(self.curTarget)
 	else
 		self.curTarget = nil;
 	end
@@ -281,17 +279,6 @@ function ENT:HarrierLeave()
 	self:StopSound(hoveringSound);
 end
 
-function ENT:OnRemove()
-end
-
-function physgunHarrierPickup( ply, ent )
-	if ent:GetClass() == "sent_harrier" then
-		return false // Don't allow them to pick up the jet or the bombs.
-	else
-		return true 
-	end
-end
-
 function ENT:StartHoverSound()
 	self.Entity:EmitSound(hoveringSound,85,100)
 end
@@ -299,8 +286,6 @@ end
 function ENT:OnTakeDamage(dmg)
 	if( dmg:IsExplosionDamage() ) then
 		self:HarrierLeave();
-		--self.hoverMode = false;
-		--self.keepPlaying = false;
 		self:BlowUpJet();
 		hook.Remove( "PhysgunPickup", "DenieHarrierPickup");
 	end
@@ -412,5 +397,3 @@ function ENT:BlowUpJet()
 		
 		self.Entity:Remove()
 end
-
-

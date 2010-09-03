@@ -53,7 +53,10 @@ function playerDies( victim, weapon, killer )
 	if victim:IsPlayer() then -- If a player dies then reset their kills to zero.
 		victim.npcKills = 0;
 		victim.plKills = 0;		
-		victim.curKillstreaks = victim.newKillstreaks		
+		victim.curKillstreaks = victim.newKillstreaks	
+		for k,v in pairs(victim.killStreaks) do
+			v[2] = true;
+		end			
 		umsg.Start("ResetKillStreakIcon", victim);
 		umsg.End();
 	end

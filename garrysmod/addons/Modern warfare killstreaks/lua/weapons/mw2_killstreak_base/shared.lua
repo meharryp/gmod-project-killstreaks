@@ -69,11 +69,16 @@ function SWEP:Deploy()
 	if !self.Owner:IsAdmin() && canUsePred != self:GetClass() then
 		self.Owner:StripWeapon(self:GetClass());
 		return;
-	end
+	end	
+	
 	self.Owner:SetNetworkedString("UsedKillStreak", "")
 	
 	self.FromCare = self.Owner:GetNetworkedBool("IsKillStreakFromCarePackage",false)
 	self.Owner:SetNetworkedBool("IsKillStreakFromCarePackage",false)
+	
+	if canUsePred != self:GetClass() then -- this is to check if the player is an admin and used the weapon from the weapon menu
+		self.FromCare = true;
+	end
 	
 	if self.UseLaptop then		
 		self.drawSequence = self:LookupSequence("open")
