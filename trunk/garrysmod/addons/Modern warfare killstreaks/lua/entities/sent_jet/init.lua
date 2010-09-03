@@ -39,7 +39,6 @@ function ENT:PhysicsUpdate()
 end
 
 function ENT:Initialize()	
-	//hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );
 	local bombSent = "sent_air_strike_cluster"
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 	self.StartPos = self:GetVar("WallLocation", NULL);
@@ -261,15 +260,4 @@ function findWall(axis, height)
 	end
 	
 	return wallLocation;
-end
-
-function ENT:OnRemove()
-end
-
-function physgunJetPickup( ply, ent )
-	if ent:GetClass() == "sent_jet" || ent:GetClass() == "sent_air_strike_cluster"  then
-		return false // Don't allow them to pick up the jet or the bombs.
-	else
-		return true 
-	end
 end

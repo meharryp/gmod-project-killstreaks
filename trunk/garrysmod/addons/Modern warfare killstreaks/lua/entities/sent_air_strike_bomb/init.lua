@@ -47,6 +47,6 @@ function ENT:Explosion()
 	util.BlastDamage(self, self.Owner, self:GetPos(), 350, 350)
 	
 	util.ScreenShake( self.Entity:GetPos(), 100, 100, 2, 5000 )
-	self:EmitSound("ambient/explosions/explode_8.wav", 401, 100)	
+	self:EmitSound("ambient/explosions/explode_5.wav", 401, 100)	
 	self:Remove()
 end
