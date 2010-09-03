@@ -33,6 +33,7 @@ ENT.retireDelay = CurTime();
 ENT.retireOnce = false;
 ENT.friendlys = {"npc_gman", "npc_alyx", "npc_barney", "npc_citizen", "npc_vortigaunt", "npc_monk", "npc_dog", "npc_eli", "npc_fisherman", "npc_kleiner", "npc_magnusson", "npc_mossman" }
 ENT.targets = NULL;
+ENT.SoundTime = CurTime();
 
 ENT.movementDelay = CurTime() + 8;
 ENT.startAngle = 180;
@@ -43,7 +44,7 @@ ENT.newAngle = 0;
 ENT.direction = math.random(0,1)
 ENT.moveTime = CurTime();
 ENT.StartMove = false;
-ENT.AllowMove = false;
+ENT.AllowMove = true; -- change this to make it move
 
 function ENT:PhysicsUpdate() -- Think
 	self.distance = math.Dist(self.Entity:GetPos().x, self.Entity:GetPos().y, self.hoverPos.x, self.hoverPos.y)
@@ -80,7 +81,7 @@ function ENT:PhysicsUpdate() -- Think
 				self.StartMove = true;	
 				self.movementDelay = CurTime() + 8;
 			end
-			self.shootDelay = CurTime() + 0.05
+			self.shootDelay = CurTime() + 0.01
 			self:FindEnemys();
 		end
 		
@@ -117,8 +118,9 @@ function ENT:PhysicsUpdate() -- Think
 		hook.Remove( "PhysgunPickup", "DenieHarrierPickup");
 	end
 	
-	if hoverSoundDuration <= CurTime() && self.keepPlaying then
+	if self.SoundTime <= CurTime() && self.keepPlaying then
 		self:StartHoverSound()	
+		self.SoundTime = hoverSoundDuration + CurTime()
 	end
 	
 	if self.retireOnce && self.retireDelay <= CurTime() && self.curTarget == nil then
@@ -136,7 +138,7 @@ function ENT:Initialize()
 	self.curTarget = nil;
 	self.setPos = true;
 	
-	hook.Add( "PhysgunPickup", "DenieHarrierPickup", physgunHarrierPickup );
+	//hook.Add( "PhysgunPickup", "DenieHarrierPickup", physgunHarrierPickup );
 	self.Owner = self.Entity:GetVar("owner",Entity(1))	
 
 --	self.hoverPos = self.Owner:GetNetworkedVector("Hover_zone_vector");	
@@ -160,7 +162,7 @@ function ENT:Initialize()
 		self.PhysObj:EnableGravity(false);
 		self.PhysObj:Wake()
 	end
-	
+	self.PhysgunDisabled = true
 	constraint.NoCollide( self.Entity, GetWorldEntity(), 0, 0 );	
 	self.keepPlaying = true
 	self.alreadyBlownUp = false;

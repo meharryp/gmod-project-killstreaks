@@ -61,16 +61,7 @@ function ENT:PhysicsUpdate()
 			self.FlyAng = Angle(0,self.MarkerAng,0)
 			
 			self.Owner:SetViewEntity(self.Owner);
-			//self.Owner:SetSuppressPickupNotices( true )
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
-			--[[
-			for k,v in pairs(self.playerWeapons) do
-				if v != "stealth_bomber" then
-					self.Owner:Give(v);	
-				end		
-			end
-			self.Owner:SetSuppressPickupNotices( false )
-			]]
 			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Stealth_bomber_RemoveHUD", self.Owner);
@@ -127,12 +118,10 @@ function ENT:Initialize()
 	self.Owner:SetNetworkedInt("StealthMarkerAngle",self.MarkerAng);
 	self.playerAng = self.Owner:GetAngles();
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
-	--[[
-	for k,v in pairs(self.Owner:GetWeapons()) do
-		self.playerWeapons[k] = v:GetClass()
-	end	
-	self.Owner:StripWeapons();
-	]]
+
+	//constraint.NoCollide( self, GetWorldEntity(), 0, 0 );	
+	
+	
 	self.Owner:SetViewEntity(self.Entity);	
 	
 	umsg.Start("Stealth_bomber_SetUpHUD", self.Owner);
@@ -157,6 +146,9 @@ function ENT:SpawnBomber()
 	end
 	//self.DropDelay = CurTime() + .3;
 	self.InitialDelay = CurTime() + .6;
+	
+	constraint.NoCollide( self.Bomber, GetWorldEntity(), 0, 0 );	
+	self.Bomber.PhysgunDisabled = true
 end
 
 function ENT:SpawnBomb()
@@ -164,6 +156,7 @@ function ENT:SpawnBomb()
 	bomb:SetPos(self.Bomber:GetPos() + (self.Bomber:GetRight() * -50) )
 	bomb:SetAngles(self.Bomber:GetAngles());
 	bomb:SetVar("owner",self.Owner)
+	bomb:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	bomb:Spawn();
 	constraint.NoCollide( self.Bomber, bomb, 0, 0 );
 	
@@ -173,11 +166,10 @@ function ENT:SpawnBomb()
 	bomb2:SetPos(self.Bomber:GetPos() + (self.Bomber:GetRight() * 50) )
 	bomb2:SetAngles(self.Bomber:GetAngles());
 	bomb2:SetVar("owner",self.Owner)
+	bomb2:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 	bomb2:Spawn();
 	constraint.NoCollide( self.Bomber, bomb2, 0, 0 );
-	bomb2:SetVar("HasBeenDropped",true);
-	
-	constraint.NoCollide( self.Bomber, GetWorldEntity(), 0, 0 );	
+	bomb2:SetVar("HasBeenDropped",true);		
 end
 
 function ENT:OnTakeDamage( dmginfo )

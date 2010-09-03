@@ -38,7 +38,14 @@ end
 
 function ENT:StartDrop()
 	self.DropType = self:GetVar("DropType","sent_CarePackage")
-	local ent = ents.Create(self.DropType)		
+	local ent;
+	if self.DropType == "Sentry_Gun" then
+		ent = ents.Create("sent_CarePackage")
+		ent:SetVar("IsSentry", true)
+	else
+		ent = ents.Create(self.DropType)
+	end
+			
 		ent:SetVar("owner",self.Owner)
 		ent:SetVar("PackageDropZone", self:GetPos())
 		ent:Spawn()

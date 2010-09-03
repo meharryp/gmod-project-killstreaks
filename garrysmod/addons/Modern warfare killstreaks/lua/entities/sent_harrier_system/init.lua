@@ -52,18 +52,8 @@ function ENT:PhysicsUpdate()
 			self.findHoverZone = false;
 			Vector( self:GetPos().x, self:GetPos().y, self:findGround() )
 			
-			//self.Owner:ExitVehicle()
-			//self.Owner:SetSuppressPickupNotices( true );
 			self.Owner:SetViewEntity(self.Owner);
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
-			--[[
-			for k,v in pairs(self.playerWeapons) do
-				if v != "harrier" then
-					self.Owner:Give(v);	
-				end	
-			end
-			]]
-			//self.Owner:SetSuppressPickupNotices( false )
 			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Harrier_Strike_RemoveHUD", self.Owner);
@@ -71,6 +61,7 @@ function ENT:PhysicsUpdate()
 
 			self.jet1Alive = true;
 			self.Jet1:SetVar("JetDropZone", self.Entity:GetPos())
+			self.Jet1:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Jet1:Spawn()
 			self.Jet1:Activate()
 			self.SpawnDelay = CurTime() + 2;
@@ -86,12 +77,14 @@ function ENT:PhysicsUpdate()
 			self.jet1Alive = false;
 			self.jet2Alive = true;
 			self.Jet2:SetVar("JetDropZone", self.Entity:GetPos())
+			self.Jet2:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Jet2:Spawn();
 			self.Jet2:Activate();
 			self.SpawnDelay = CurTime() + 2;
 		elseif self.SpawnDelay <= CurTime() && self.jet2Alive then
 			self.jet2Alive = false;			
 			self.Harrier:SetVar("HarrierHoverZone", self.Entity:GetPos())
+			self.Harrier:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
 			self.Harrier:Spawn();
 			self.Harrier:Activate();
 			self.removeSelf = true;
@@ -100,8 +93,6 @@ function ENT:PhysicsUpdate()
 end
 
 function ENT:Initialize()
-	removeEnt = false;
-	//hook.Add("EntityRemoved", "entRemoved", JetsRemoved)
 	
 	self.sky = findSky()
 	if self.sky == -1 then return end
@@ -134,20 +125,11 @@ function ENT:Initialize()
 	self.Harrier:SetVar("owner",self.Owner) 
 
 	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
-	--[[
-	for k,v in pairs(self.Owner:GetWeapons()) do
-		self.playerWeapons[k] = v:GetClass()
-	end	
-	self.Owner:StripWeapons();
-	]]
+
 	self.Owner:SetViewEntity(self.Entity);
 	self.Owner:SetNetworkedString("harrier_Killsteak", "none")
 	umsg.Start("Harrier_Strike_SetUpHUD", self.Owner);
 	umsg.End();
-end
-
-function ENT:OnTakeDamage( dmginfo )
-	self.Entity:TakePhysicsDamage( dmginfo )	
 end
 
 function findSky()
@@ -173,15 +155,11 @@ function findSky()
 		hitSky = traceData.HitSky;
 		hitWorld = traceData.HitWorld;
 		if hitSky then
-			//MsgN("Hit the sky")
 			skyLocation = traceData.HitPos.z;
 			bool = false;
 		elseif hitWorld then
 			trace.start = traceData.HitPos + Vector(0,0,50);
-			//MsgN("hit the world, not the sky")
 		else 
-			//Msg("Hit ")
-			//MsgN(traceData.Entity:GetClass());
 			table.insert(filterList, traceData.Entity)
 		end
 			
@@ -230,7 +208,4 @@ function ENT:findGround()
 	end
 	
 	return groundLocation;
-end
-
-function ENT:OnRemove( )
 end

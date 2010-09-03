@@ -18,7 +18,7 @@ function ENT:Initialize()
 		self.PhysObj:Wake()
 	end
 	
-	self.Entity:EmitSound("ac-130_kill_sounds/105mminair.wav", 475, 100)
+	timer.Simple(.5, self.EmitSound, self, "ac-130_kill_sounds/105mminair.wav", 475, 100)
 end
 
 function ENT:PhysicsCollide( data, physobj )
@@ -38,7 +38,7 @@ function ENT:Explosion()
 	
 	util.BlastDamage(self, self.Owner, self:GetPos(), blastRadius, blastRadius)
 
-	self:EmitSound(self.ExplosionSound, 80,100)
+	self:EmitSound(self.ExplosionSound, 400,100)
 	
 	timer.Simple(.5, self.CountDeadBodys, self, targets)
 	
