@@ -54,7 +54,7 @@ function playerDies( victim, weapon, killer )
 		victim.npcKills = 0;
 		victim.plKills = 0;		
 		victim.curKillstreaks = victim.newKillstreaks	
-		for k,v in pairs(victim.killStreaks) do
+		for k,v in pairs(victim.killStreaks) do -- If the player has any killstreaks and they were killed will make it so that their killstreaks will not get them kills next life
 			v[2] = true;
 		end			
 		umsg.Start("ResetKillStreakIcon", victim);
