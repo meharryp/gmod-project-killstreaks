@@ -36,7 +36,7 @@ local function drawAC130HUD()
 	elseif ac130weapon == 1 then
 		sen = LocalPlayer():GetFOV() / 105;
 	else
-		sen = LocalPlayer():GetFOV() / 100;
+		sen = LocalPlayer():GetFOV() / 53;
 	end
 	LocalPlayer():GetActiveWeapon().MouseSensitivity = sen
 
@@ -52,7 +52,10 @@ local function drawAC130HUD()
 			if v:Team() != LocalPlayer():Team() then
 				surface.SetDrawColor(255,0,0,255)
 				surface.DrawOutlinedRect( pos.x - dist / 2, pos.y - dist / 2, dist, dist)
-			end			
+			else
+				surface.SetDrawColor(0,255,0,255)
+				surface.DrawOutlinedRect( pos.x - dist / 2, pos.y - dist / 2, dist, dist)
+			end
 		elseif v:IsNPC() then
 			tarpos = v:GetPos() + Vector(0,0,v:OBBMaxs().z * .5)
 			pos = tarpos:ToScreen()			
