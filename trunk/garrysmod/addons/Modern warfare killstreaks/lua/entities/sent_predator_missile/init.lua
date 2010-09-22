@@ -46,7 +46,7 @@ function ENT:PhysicsUpdate()
 		
 		if self.Trail and self.Trail:IsValid() then
 			self.Trail:SetPos(self.Entity:GetPos() - 16*self.Entity:GetForward())
-			self.Trail:SetLocalAngles(Vector(0,0,0))
+			self.Trail:SetLocalAngles(Angle(0,0,0))
 		else
 			self:SpawnTrail()
 		end	
@@ -114,7 +114,7 @@ end
 function ENT:PredatorExplosion()
 
 	util.BlastDamage(self, self.Owner, self:GetPos(), 700, 700)
-	ParticleExplode = ents.Create("info_particle_system")
+	local ParticleExplode = ents.Create("info_particle_system")
 	ParticleExplode:SetPos(self:GetPos())
 	ParticleExplode:SetKeyValue("effect_name", "agm_explode")
 	ParticleExplode:SetKeyValue("start_active", "1")
@@ -163,9 +163,13 @@ function ENT:SpawnTrail()
 	self.Trail = ents.Create("env_rockettrail")
 	self.Trail:SetPos(self.Entity:GetPos() - 16*self.Entity:GetForward())
 	self.Trail:SetParent(self.Entity)
-	self.Trail:SetLocalAngles(Vector(0,0,0))
+	self.Trail:SetLocalAngles(Angle(0,0,0))
 	self.Trail:Spawn()
 	
+end
+
+function getTeam()
+	return self.Owner:Team()
 end
 
 function ENT:StartThrustSound()	

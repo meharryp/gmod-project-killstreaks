@@ -33,7 +33,6 @@ end
 
 function ENT:PhysicsUpdate()
 	self.Entity:SetPos(Vector(self.Entity:GetPos().x, self.Entity:GetPos().y, self.sky))
-	//self:SetAngles(Angle(90, self.Owner:GetAimVector():Angle().y , 0));
 	if self.findHoverZone then
 		if 	self.Entity.Owner:KeyDown( IN_FORWARD ) then
 			self.Entity:SetPos(self.Entity:GetPos() + Vector(moveFactor,0,0));
@@ -59,16 +58,9 @@ function ENT:PhysicsUpdate()
 			self.WallLoc = self:FindWall();
 			self.FlyAng = Angle(0,self.MarkerAng,0)
 			
-			self.Owner:SetViewEntity(self.Owner);
-			
+			self.Owner:SetViewEntity(self.Owner);			
 			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
-			--[[
-			for k,v in pairs(self.playerWeapons) do
-				if v != "precision_airstrike" then
-					self.Owner:Give(v);	
-				end			
-			end
-			]]
+
 			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Precision_Strike_RemoveHUD", self.Owner);

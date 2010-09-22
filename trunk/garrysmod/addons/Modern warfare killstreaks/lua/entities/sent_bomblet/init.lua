@@ -15,7 +15,7 @@ end
 function ENT:Explode()
 
 	util.BlastDamage(self, self.Owner, self:GetPos(), 500, 100)
-	ParticleExplode = ents.Create("info_particle_system")
+	local ParticleExplode = ents.Create("info_particle_system")
 	ParticleExplode:SetPos(self:GetPos())
 	ParticleExplode:SetKeyValue("effect_name", "cluster_explode")
 	ParticleExplode:SetKeyValue("start_active", "1")

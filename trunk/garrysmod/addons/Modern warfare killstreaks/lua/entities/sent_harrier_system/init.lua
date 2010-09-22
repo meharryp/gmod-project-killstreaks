@@ -100,7 +100,7 @@ function ENT:Initialize()
 	
 	self.Entity:SetModel( "models/dav0r/camera.mdl" )
 	self.Entity:SetColor(255,255,255,0)
-	self.Entity:SetAngles(Vector(90,0,0))
+	self.Entity:SetAngles(Angle(90,0,0)) ---Need to be pointed out
 	
 	self.Entity:PhysicsInit( SOLID_VPHYSICS )
 	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )	

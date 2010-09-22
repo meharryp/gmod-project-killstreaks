@@ -114,8 +114,7 @@ function ENT:PhysicsUpdate() -- Think
 	end	
 	
 	if( !self.Entity:IsInWorld()) then
-		self.Entity:Remove();
-		hook.Remove( "PhysgunPickup", "DenieHarrierPickup");
+		self:Remove();
 	end
 	
 	if self.SoundTime <= CurTime() && self.keepPlaying then
@@ -251,6 +250,10 @@ function ENT:EngageEnemy()
 	end
 end
 
+function ENT:GetTeam()
+	return self.Owner:Team()
+end
+
 function ENT:traceHitEnemy(enemy)
 
 	local startPos = self:GetPos();
@@ -285,12 +288,15 @@ end
 
 function ENT:OnTakeDamage(dmg)
 	if( dmg:IsExplosionDamage() ) then
-		self:HarrierLeave();
-		self:BlowUpJet();
-		hook.Remove( "PhysgunPickup", "DenieHarrierPickup");
+		self:Destroy();
 	end
- end
- 
+end
+
+function ENT:Destroy()
+	self:HarrierLeave();
+	self:BlowUpJet();
+end 
+
 function ENT:BlowUpJet()
 	if self.alreadyBlownUp then return end;
 	self.alreadyBlownUp = true;
@@ -319,7 +325,7 @@ function ENT:BlowUpJet()
 		
 		--Explosions!
 		
-		ParticleExplode = ents.Create("info_particle_system")
+		local ParticleExplode = ents.Create("info_particle_system")
 		ParticleExplode:SetPos(self:GetPos())
 		ParticleExplode:SetKeyValue("effect_name", "harrier_explode") -- The names are cluster_explode, 40mm_explode, and agm_explode.
 		ParticleExplode:SetKeyValue("start_active", "1")

@@ -1,8 +1,8 @@
 
 if ( CLIENT ) then
-	SWEP.PrintName			= "UAV"
+	SWEP.PrintName			= "EMP"
 end
 
 SWEP.Base 				= "mw2_killstreak_base"
 SWEP.AdminSpawnable		= true
-SWEP.Ent = "mw2_UAV"
+SWEP.Ent = "mw2_sent_Emp"
