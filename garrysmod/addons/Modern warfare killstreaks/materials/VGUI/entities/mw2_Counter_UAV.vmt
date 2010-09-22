@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "VGUI\entities\mw2_Counter_UAV"
+	"$vertexalpha" 1
+	"$vertexcolor" 1
+	"$nolod" 1
+}

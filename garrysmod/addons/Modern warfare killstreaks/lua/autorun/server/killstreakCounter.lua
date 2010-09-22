@@ -1,9 +1,11 @@
 if not SERVER then return end
 require("datastream")
 MW2KillStreakAddon = 1
+MW2_KillStreaks_EMP_Team = -1
 local enableKillStreaks = CreateConVar ("mw2_enable_killstreaks", "1", {FCVAR_REPLICATED, FCVAR_ARCHIVE})
 local maxNpcKills = CreateConVar ("mw2_NPC_requirement", "1", {FCVAR_REPLICATED, FCVAR_ARCHIVE});
 local MW2AllowUseOfNuke = CreateConVar ("mw2_Allow_Nuke", "1", {FCVAR_REPLICATED, FCVAR_ARCHIVE});
+local MW2AllowTeams = CreateConVar ("mw2_Allow_Teams", "1", {FCVAR_REPLICATED, FCVAR_ARCHIVE});
 local frendlysNpcs = {"npc_gman", "npc_alyx", "npc_barney", "npc_citizen", "npc_vortigaunt", "npc_monk", "npc_dog", "npc_eli", "npc_fisherman", "npc_kleiner", "npc_magnusson", "npc_mossman" }
 local easyKillNpcs = {"npc_breen", "npc_cscanner", "npc_pigeon","npc_seagull","npc_crow", "npc_clawscanner", "npc_stalker", "npc_barnacle"}
 
@@ -16,7 +18,9 @@ function playerJoin(ply) --when a player joins the server initailizes the nessac
 	ply:SetNetworkedString("AddKillStreak","none")
 	ply:ConCommand("OpenKillstreakWindow")
 	ply.FirstSpawn = true;
-	ply:SetNetworkedString("MW2TeamSound", tostring(math.random(1,5)))
+	local teamNum = math.random(1,5)
+	ply:SetNetworkedString("MW2TeamSound", tostring( teamNum ))
+	ply:SetTeam(teamNum);
 	ply:SetNetworkedBool("MW2AC130ThermalView", true) 
 end
 
@@ -132,6 +136,12 @@ function giveAmmo(pl)
 end
 
 function useKillStreak(player, command, arguments ) -- command for the user to use the kill streaks they have aquired.
+
+	if MW2_KillStreaks_EMP_Team != -1 && player:Team() == MW2_KillStreaks_EMP_Team then
+		--Print out that the killstreaks are temp. unavlible
+		return;
+	end
+
 	local remaingKillStreaks = table.Count(player.killStreaks)	
 	
 	if remaingKillStreaks > 0 then	
@@ -175,6 +185,9 @@ datastream.Hook( "ChoosenKillstreaks", setKillstreaks )
 
 function setMW2Voices( pl, handler, id, encoded, decoded )
 	pl:SetNetworkedString("MW2TeamSound", decoded[1])
+	if MW2AllowTeams:GetInt() == 1 then
+		pl:SetTeam(decoded[1]);
+	end
 end
 datastream.Hook( "SetMw2Voices", setMW2Voices )
 

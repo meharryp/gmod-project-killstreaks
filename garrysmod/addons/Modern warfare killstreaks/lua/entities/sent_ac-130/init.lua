@@ -168,10 +168,10 @@ function ENT:Initialize()
 	self.sky = self:findGround()
 	
 	if self.sky == -1 then 
+		self:Remove();
 		return;
 	end
 	self.sky = self.sky + 6000;	
-	
 	if self.Owner:IsAdmin() && !SinglePlayer()  then
 		self.AC130Life = CurTime() + 60		-- Admins get about 1.5 times the normal rate in the ac 130 then regular players.
 		self.AC130Time = 60
@@ -184,17 +184,18 @@ function ENT:Initialize()
 	local forw = self.Owner:GetForward();
 	local distance = 2000
 	local spawnPos = lplPos + ((-1 * forw) * distance)
-	spawnPos = spawnPos + Vector(0,0,self.sky)
+	spawnPos = Vector( spawnPos.x, spawnPos.y, self.sky )
 	if !util.IsInWorld(spawnPos) then	
 		spawnPos = lplPos + Vector(0,0,self.sky)
 	end
 
-	isInWorld = util.IsInWorld(spawnPos);
-	if !isInWorld then
+	if !util.IsInWorld(spawnPos) then
+		MsgN("Pos = " .. tostring(spawnPos));
 		self:Remove();
 		MsgN("The AC-130 was not of this world, and so had to be sent off to kill other bad guys who are of it's world")
 		umsg.Start("AC_130_Error", self.Owner);
-		umsg.End()			
+		umsg.End();
+		self.Wep:CallIn();
 		return;
 	end
 	
@@ -317,7 +318,7 @@ end
 
 function ENT:OnTakeDamage(dmg)
 	if( dmg:IsExplosionDamage() && self.Flares <= 0 ) then
-		self:RemoveAC130();
+		self:Destroy()
 	end
 end
 
@@ -329,6 +330,15 @@ function ENT:StopReloadingForHUD(weaponType)
 	elseif weaponType == "25mm" then	
 		self.Is25mmReloading = false
 	end
+end
+
+function ENT:Destroy()
+	--spawn effect for explosion here.
+	self:RemoveAC130();
+end
+
+function ENT:GetTeam()
+	return self.Owner:Team()
 end
 
 function ENT:RemoveAC130()
@@ -370,7 +380,7 @@ function ENT:findGround()
 	local minheight = -16384
 	local startPos = self.Owner:GetPos()
 	local endPos = Vector(startPos.x, startPos.y,minheight);
-	local filterList = {self.Owner}
+	local filterList = {self.Owner, self}
 
 	local trace = {}
 	trace.start = startPos;
