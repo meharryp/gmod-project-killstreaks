@@ -20,6 +20,7 @@ ENT.playOnce = true;
 ENT.MarkerAng = 0;
 ENT.WallLoc = NULL;
 ENT.playerWeapons = {};
+ENT.playerSpeeds = {};
 
 function ENT:Think()
 	if( self.PhysObj:IsAsleep() ) then
@@ -59,7 +60,7 @@ function ENT:PhysicsUpdate()
 			self.FlyAng = Angle(0,self.MarkerAng,0)
 			
 			self.Owner:SetViewEntity(self.Owner);			
-			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+			GAMEMODE:SetPlayerSpeed(self.Owner, self.playerSpeeds[1], self.playerSpeeds[2])
 
 			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
@@ -87,8 +88,7 @@ function ENT:PhysicsUpdate()
 		end
 	end
 	if !self.findHoverZone && self.playOnce then
-		umsg.Start("playPrecisionAirstrikeInboundSound", self.Owner);
-		umsg.End()
+		self.Wep:PlaySound();
 		self.playOnce = false;
 	end
 		if self.SpawnDelay <= CurTime() && self.jet1Alive then
@@ -147,8 +147,8 @@ function ENT:Initialize()
 	
 	self.Jet3 = ents.Create("sent_jet")
 	self.Jet3:SetVar("owner",self.Owner) 
-	
-	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
+	GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
 
 	self.Owner:SetViewEntity(self.Entity);		
 	

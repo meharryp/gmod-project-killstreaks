@@ -44,8 +44,9 @@ SWEP.holsterBool = false;
 SWEP.drawSequence = nil;
 SWEP.detonateSequence = nil;
 SWEP.holsterSequence = nil;
+SWEP.DelaySound = false;
 
-function SWEP:Initialize()
+function SWEP:Initialize()	
 	if ModelExsists && !self.UseLaptop then
 		self.ViewModelFlip		= true
 		self.ViewModel			= "models/weapons/v_slam.mdl"
@@ -93,7 +94,9 @@ function SWEP:Deploy()
 
 			self.Weapon:SendWeaponAnim(ACT_SLAM_DETONATOR_DRAW)
 			self.drawTime = self:SequenceDuration() + CurTime();
-			self:PlaySound();
+			if !self.DelaySound  then
+				self:PlaySound();
+			end
 		else
 			if self.CallOnce then
 				timer.Simple(1, self, self.Run);
@@ -111,6 +114,9 @@ function SWEP:Think()
 		if self:GetSequence() == self.drawSequence && CurTime() > self.drawTime && self.drawBool then
 			self.drawBool = false;
 			self:Run();
+			if !self.DelaySound  then
+				self:PlaySound();
+			end
 		elseif self.CalledIn && !self.holsterBool then
 			self.Weapon:SendWeaponAnim(ACT_VM_HOLSTER)
 			self.holsterTime = self:SequenceDuration( ) + CurTime();
@@ -155,6 +161,9 @@ function SWEP:Run()
 end
 
 function SWEP:PlaySound()
+	umsg.Start("playWeaponInboundSound", self.Owner);
+		umsg.String(self:GetClass().."")
+	umsg.End()
 end
 
 function SWEP:PrimaryAttack()

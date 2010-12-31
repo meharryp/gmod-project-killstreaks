@@ -1,11 +1,13 @@
 //if !MW2KillStreakAddon then return end
 function MW2UserOptions(Panel)
+
 	Panel:ClearControls()
 	
 	button = {}
 	button.Label = "Choose killstreaks"
 	button.Command = "OpenKillstreakWindow";
 	Panel:AddControl("Button", button)
+	
 end
 
 function MW2AdminOptions(Panel)

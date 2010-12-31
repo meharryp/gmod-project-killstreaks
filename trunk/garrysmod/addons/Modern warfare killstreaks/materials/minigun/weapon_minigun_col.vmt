@@ -1,0 +1,8 @@
+"vertexlitgeneric"
+{
+	"$baseTexture" "minigun/weapon_minigun_col"
+        "$bumpmap" "minigun/weapon_minigun_nml"
+
+
+}
+

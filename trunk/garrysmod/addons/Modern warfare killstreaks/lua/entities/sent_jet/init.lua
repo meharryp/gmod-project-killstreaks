@@ -152,7 +152,7 @@ function ENT:DropBomb()
 		self.bomb2:SetVar("HasBeenDropped",true);
 		
 		self.droppedBombset1 = true;
-		self:EmitSound(flyBySound, 200, 100)
+		self:EmitSound(flyBySound, 500, 100)
 	elseif !self.droppedBombset2 then
 		constraint.RemoveConstraints(self.bomb3, "Weld")
 		constraint.RemoveConstraints(self.bomb4, "Weld")

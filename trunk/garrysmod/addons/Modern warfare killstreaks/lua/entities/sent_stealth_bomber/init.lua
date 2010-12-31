@@ -16,6 +16,7 @@ ENT.WallLoc = NULL;
 ENT.Bomber = NULL
 ENT.InitialDelay = CurTime();
 ENT.playerWeapons = {};
+ENT.playerSpeeds = {};
 
 function ENT:Think()
 	if( self.PhysObj:IsAsleep() ) then
@@ -61,7 +62,7 @@ function ENT:PhysicsUpdate()
 			self.FlyAng = Angle(0,self.MarkerAng,0)
 			
 			self.Owner:SetViewEntity(self.Owner);
-			GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+			GAMEMODE:SetPlayerSpeed(self.Owner, self.playerSpeeds[1], self.playerSpeeds[2])
 			self.Wep:CallIn();
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Stealth_bomber_RemoveHUD", self.Owner);
@@ -86,8 +87,7 @@ function ENT:PhysicsUpdate()
 	end
 	
 	if !self.findHoverZone && self.playOnce then
-		umsg.Start("playPrecisionAirstrikeInboundSound", self.Owner);
-		umsg.End()
+		self.Wep:PlaySound();
 		self.playOnce = false;
 	end
 		
@@ -117,7 +117,9 @@ function ENT:Initialize()
 	self.MarkerAng = 0;
 	self.Owner:SetNetworkedInt("StealthMarkerAngle",self.MarkerAng);
 	self.playerAng = self.Owner:GetAngles();
-	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	
+	self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
+	GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
 
 	//constraint.NoCollide( self, GetWorldEntity(), 0, 0 );	
 	
