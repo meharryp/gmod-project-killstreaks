@@ -249,8 +249,10 @@ function ENT:Initialize()
 	
 	umsg.Start("AC_130_SetUpHUD", self.Owner);
 	umsg.End()	
+	--[[
 	umsg.Start("playAC130DeploySound", self.Owner);
 	umsg.End()
+	]]
 end
 
 function ENT:FireMissile(target, weaponType)

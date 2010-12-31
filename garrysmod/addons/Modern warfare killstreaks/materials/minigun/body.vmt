@@ -1,0 +1,5 @@
+"vertexLitGeneric"
+{
+        $basetexture "minigun/body"
+        $model 1
+}

@@ -28,6 +28,16 @@ function ENT:PhysicsCollide( data, physobj )
 		self.Smoke:Spawn()
 		self.Smoke:Activate()
 		self.Smoke:Fire("kill", "", 12) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.
+		
+		local dropType = self:GetVar("DropType", "sent_CarePackage");
+		if dropType == "sent_CarePackage" then
+			self:PlaySound("care_package")
+		elseif dropType == "Sentry_Gun" then
+			self:PlaySound("mw2_sentry_gun")
+		else
+			self:PlaySound("emergency_airdrop")
+		end
+		
 		timer.Simple(2, self.StartDrop, self);
 		timer.Simple(12, self.Remove, self);
 	end
@@ -50,4 +60,10 @@ function ENT:StartDrop()
 		ent:SetVar("PackageDropZone", self:GetPos())
 		ent:Spawn()
 		ent:Activate()
+end
+
+function ENT:PlaySound(soundName)
+	umsg.Start("playWeaponInboundSound", self.Owner);
+		umsg.String(soundName.."")
+	umsg.End()
 end

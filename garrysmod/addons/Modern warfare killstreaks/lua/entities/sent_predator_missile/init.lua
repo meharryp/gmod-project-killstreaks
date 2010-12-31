@@ -12,6 +12,7 @@ ENT.playerWeapons = {};
 ENT.Sky = 0;
 ENT.ang = nil;
 ENT.turnDelay = CurTime();
+ENT.playerSpeeds = {};
 local missileThrustSound = Sound("killstreak_rewards/predator_missile_thruster.wav")
 local missileBoostSound = Sound("killstreak_rewards/predator_missile_boost.wav")
 local missileExplosionSound = Sound("killstreak_rewards/predator_missile_explosion.wav")
@@ -86,14 +87,12 @@ function ENT:Initialize()
 	if (self.PhysObj:IsValid()) then
 		self.PhysObj:Wake()
 	end	
-	
-	GAMEMODE:SetPlayerSpeed(self.Owner, 0, 0)
+	self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
+	GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
 	self.playerAng = self.Owner:GetAngles();
 		
 	self.Owner:SetViewEntity(self);
 	umsg.Start("Predator_missile_SetUpHUD", self.Owner);
-	umsg.End()
-	umsg.Start("playPredatorMissileInboundSound", self.Owner);
 	umsg.End()
 	self.keepPlaying = true;
 end
@@ -104,7 +103,7 @@ function ENT:PhysicsCollide( data, physobj )
 		self.Owner:SetViewEntity(self.Owner)
 		self.Owner:ExitVehicle()
 		self.Owner:SetAngles(self.playerAng)
-		GAMEMODE:SetPlayerSpeed(self.Owner, 250, 500)
+		GAMEMODE:SetPlayerSpeed(self.Owner, self.playerSpeeds[1], self.playerSpeeds[2])
 		umsg.Start("Predator_missile_RemoveHUD", self.Owner);
 		umsg.End();
 		self.Wep:CallIn();

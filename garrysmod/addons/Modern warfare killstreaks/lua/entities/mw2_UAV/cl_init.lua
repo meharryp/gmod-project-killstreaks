@@ -106,7 +106,7 @@ function killUav()
 end
 
 function start()
-	playUAVDeploySound();
+	--playUAVDeploySound();
 	totalActive = totalActive + 1;
 	
 	if isActive then

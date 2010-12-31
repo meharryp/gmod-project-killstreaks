@@ -6,8 +6,10 @@ SWEP.UseLaptop = true;
 SWEP.Base 				= "mw2_killstreak_base"
 SWEP.AdminSpawnable		= true
 SWEP.Ent = "sent_stealth_bomber"
+SWEP.DelaySound = true;
 
 function SWEP:PlaySound()
-	umsg.Start("playHarrierLaptopDeploySound", self.Owner);
-	umsg.End()	
+	umsg.Start("playWeaponInboundSound", self.Owner);
+		umsg.String("precision_airstrike")
+	umsg.End()
 end

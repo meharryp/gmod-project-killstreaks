@@ -13,6 +13,9 @@ ENT.IsInZone = false;
 ENT.Top = NULL;
 ENT.Back = NULL;
 ENT.Model = Model("models/military2/air/air_h500.mdl")
+
+local roaterSound = Sound("killstreak_misc/ah6_loop.wav")
+
 function ENT:PhysicsUpdate()
 	if !self.IsInZone then
 		self.PhysObj:SetVelocity(self.Entity:GetForward()*1500)
@@ -23,14 +26,15 @@ function ENT:PhysicsUpdate()
 		end
 	end
 	
-	self.Entity:SetPos(Vector(self.Entity:GetPos().x, self.Entity:GetPos().y, self.ground));
+	self.Entity:SetPos(Vector(self.Entity:GetPos().x, self.dropPos.y, self.ground));
 	self.Entity:SetAngles(self.StartAngle)
 
 	if( !self.Entity:IsInWorld() && self.WasInWorld && self.RemoveDelay < CurTime()) then
+		//self:StopSound(roaterSound)
+		self.Owner:ConCommand("stopsound");
 		self.Entity:Remove();
 		self.Top:Remove();
 		self.Back:Remove();		
-		hook.Remove( "PhysgunPickup", "DisallowJetPickUp");
 		return;
 	end
 	
@@ -50,7 +54,6 @@ function ENT:PhysicsUpdate()
 end
 
 function ENT:Initialize()	
-	hook.Add( "PhysgunPickup", "DisallowJetPickUp", physgunJetPickup );	
 	self.Owner = self:GetVar("owner")		
 	self.dropPos = self:GetVar("PackageDropZone", NULL) -- Needs to be set from the weapon
 	self.ground = findGround() + 1200;
@@ -106,6 +109,7 @@ function ENT:Initialize()
 	constraint.Axis( self, self.Top, 0, 0, (Vector(0,0,0)), Vector(0,0,0) , 0, 0, 0, 1 )	
 	constraint.Axis( self, self.Back, 0, 0, Vector(-185,-3,13) , Vector(0,0,0), 0, 0, 0, 1 ) 
 	constraint.Keepupright( self.Top, Angle(0,0,0), 0, 15 )	
+	self:EmitSound(roaterSound, 500, 100);
 end
 
 function ENT:OnTakeDamage( dmginfo )
@@ -113,7 +117,7 @@ end
 
 function ENT:FindDropZone(vec)
 	local jetPos = self.Entity:GetPos();
-	local distance = jetPos - self.dropPos;
+	local distance = jetPos - self.dropPos;	
 	if math.abs(distance.x) <= radius && math.abs(distance.y) <= radius then
 		return true;		
 	end
@@ -222,12 +226,4 @@ function findWall(axis, height)
 end
 
 function ENT:OnRemove()
-end
-
-function physgunJetPickup( ply, ent )
-	if ent:GetClass() == "sent_jet" || ent:GetClass() == "sent_air_strike_cluster"  then
-		return false // Don't allow them to pick up the jet or the bombs.
-	else
-		return true 
-	end
 end

@@ -6,8 +6,5 @@ SWEP.UseLaptop = true;
 SWEP.Base 				= "mw2_killstreak_base"
 SWEP.AdminSpawnable		= true
 SWEP.Ent = "sent_harrier_system";
+SWEP.DelaySound = true;
 
-function SWEP:PlaySound()
-	umsg.Start("playHarrierLaptopDeploySound", self.Owner);
-	umsg.End()
-end

@@ -82,6 +82,8 @@ function checkKills(ply)
 		addKillStreak(ply,"uav");
 	elseif kills == 4 && canUseStreak(ply, "Care Package") then 
 		addKillStreak(ply,"care_package");
+	elseif kills == 4 && canUseStreak(ply, "Counter UAV") then 
+		addKillStreak(ply,"mw2_Counter_UAV");
 	elseif kills == 5 && canUseStreak(ply, "Predator missile") then 
 		addKillStreak(ply,"predator_missile");
 		

@@ -6,7 +6,6 @@ local centerY = ScrH()/2 - height/2
 local killstreaks = {{"UAV", 3, "uav"}, {"Care Package", 4, "care_package"}, {"Counter UAV", 4, "mw2_Counter_UAV"}, {"Sentry Gun", 5, "mw2_sentry_gun"}, {"Predator missile", 5, "predator_missile"}, {"Precision Airstrike", 6, "precision_airstrike"},
 					 {"Harrier", 7, "harrier"}, {"Emergency Airdrop", 8, "Emergency_Airdrop"}, {"Stealth bomber", 9, "stealth_bomber"}, {"AC-130", 11, "ac-130"}, {"EMP", 15, ""}, {"Nuke", 25, "Tactical_Nuke"}}
 local texturePath = "VGUI/entities/"
-local selectedNums = 0;
 local killNumLabels = {}
 
 local function findValue(tab, var) -- tab is a 2d array
@@ -41,7 +40,7 @@ end
 
 local numTab = {nil, nil, nil}
 
-local function setImage(picTab, value, insert)
+local function setImage(picTab, value, insert)	
 	local killNum = findValue(killstreaks, value)[2];
 	local path = findValue(killstreaks, value)[3];
 	
@@ -120,6 +119,7 @@ end
 
 function MW2KillstreakChooseFrame()
 	local select3 = 0;
+	local selectedNums = 0;
 	local canUseNuke = GetConVarNumber("mw2_Allow_Nuke") or 0
 	local buttonHeight, buttonSpaceing = 30, 5;
 	local buttonWidth, buttonX = 100, 10;	
@@ -151,7 +151,6 @@ function MW2KillstreakChooseFrame()
 	local numButtons = 1;
 	local selectedStreaks = {};
 	local defaultColor, selectedColor, restrictedColor = Color( 39, 37, 54, 255 ), Color( 0, 255, 0, 50 ), Color(255,0,0,100);
-
 	for k,v in ipairs(killstreaks) do
 	
 		if v[1] != "Nuke" || ( canUseNuke == 1 && v[1] == "Nuke" ) then -- Have to wrap the whole process in an if statement to check against weither the nuke is usable or not, :'( no continue statement
@@ -173,7 +172,7 @@ function MW2KillstreakChooseFrame()
 					table.insert(tab, valButton)
 				end
 			end
-
+			
 			local pressed = false;
 			valButton.DoClick = function(valButton)
 				local tab = nil;
@@ -285,8 +284,11 @@ function MW2KillstreakChooseFrame()
 	selectButton:SetSize(150,30)	
 	selectButton.DoClick = function()
 		--PrintTable( selectedStreaks )
+		selectedNums = 0;
+		killNumLabels = {}
+		numTab = {nil, nil, nil}
 		datastream.StreamToServer( "ChoosenKillstreaks", selectedStreaks )
-		--DermaFrame:Close();
+		DermaFrame:Close();
 	end	
 	
 	DermaPanel.Paint = function() -- The paint function
