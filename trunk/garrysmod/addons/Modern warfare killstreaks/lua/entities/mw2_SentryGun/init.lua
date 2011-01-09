@@ -72,7 +72,7 @@ function ENT:Think()
 		if self.Target == nil then
 			
 			for i, pEnt in ipairs(ConeEnts) do
-				if pEnt:IsNPC() then
+				if pEnt:IsNPC() && pEnt:GetClass() != "npc_bullseye" then
 					local ang = ( pEnt:GetPos() - self:GetPos() ):Angle()
 					local yaw = ang.y - self:GetAngles().y;
 					if yaw > 60 then
@@ -153,6 +153,13 @@ function ENT:Initialize()
 	self:SetMoveType( MOVETYPE_VPHYSICS )	
 	self:SetSolid( SOLID_VPHYSICS )
 	
+	self.bullseye = ents.Create("npc_bullseye");
+	self.bullseye:SetPos(self:GetPos() + self:OBBCenter());
+	self.bullseye:SetKeyValue("health", tostring(self.OurHealth))
+	self.bullseye:CallOnRemove("RemoveSentry", self.KillBullseye, self);
+	self.bullseye:SetParent(self);
+	self.bullseye:Spawn();
+	
 	self.PhysObj = self.Entity:GetPhysicsObject()
 	if (self.PhysObj:IsValid()) then
 		self.PhysObj:Wake()
@@ -165,10 +172,14 @@ function ENT:Initialize()
 	
 	self.FireAnim, self.FireTime = self:LookupSequence( "Fire" );
 	self.LifeTimer = CurTime() + 90;
-	MsgN(self.Owner)
+
 	umsg.Start("setMW2SentryGunOwner", self.Owner);
 		umsg.Entity(self.Owner);
 	umsg.End()
+end
+
+function ENT:KillBullseye(ent)
+	ent:Destroy()
 end
 
 function ENT:EngageTarget(pitch, yaw)
@@ -239,7 +250,7 @@ function ENT:OnTakeDamage(dmg)
 	self.OurHealth = self.OurHealth - dmg:GetDamage(); -- Reduce the amount of damage took from our health-variable
  
 	if(self.OurHealth <= 0) then -- If our health-variable is zero or below it
-		self:Destroy(); -- Remove our entity
+		//self:Destroy(); -- Remove our entity
 	end
  end
 

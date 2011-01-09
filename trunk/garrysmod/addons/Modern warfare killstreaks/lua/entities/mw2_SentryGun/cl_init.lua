@@ -20,20 +20,20 @@ function ENT:Draw()
 	end
 	
 	local team = lpl:GetNetworkedString("MW2TeamSound");
-	MsgN("team = " .. team )
+	--MsgN("team = " .. team )
 	local str;
 	if str == nil then
-		return 
+		--return 
 	end
-	if team == 1 then
+	if team == "1" then
 		str = "militia";
-	elseif team == 2 then
+	elseif team == "2" then
 		str = "seals";
-	elseif team == 3 then
+	elseif team == "3" then
 		str = "opfor";
-	elseif team == 4 then
+	elseif team == "4" then
 		str = "rangers";
-	elseif team == 5 then
+	elseif team == "5" then
 		str = "tf141";
 	end
 	
@@ -44,7 +44,7 @@ function ENT:Draw()
 	local width = wlh.x
 	entPos = self:GetPos() + Vector(0, 0, eHeight + 8)
 	
-	cam.Start3D2D( entPos, Angle(0, LocalPlayer():GetAngles().y , 90), 1 )
+	cam.Start3D2D( entPos, Angle(0, LocalPlayer():GetAngles().y - 90 , 90), 1 )
         surface.SetTexture(tex)
 		surface.SetDrawColor(255,255,255,255) // Makes sure the image draws with all colors
 		surface.DrawTexturedRect(-8, -8, 16,16)
