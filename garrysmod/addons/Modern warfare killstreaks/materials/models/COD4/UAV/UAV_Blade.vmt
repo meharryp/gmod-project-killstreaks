@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\COD4\UAV\UAV_Blade"
+	"$translucent" 1
+}
