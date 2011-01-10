@@ -1,5 +1,5 @@
 
-local ModelExsists			= file.Exists("../models/weapons/v_slaam.mdl")
+local ModelExsists			= file.Exists("../models/weapons/v_slam.mdl")
 if ( CLIENT ) then
 	SWEP.Author				= "Death dealer142"
 	SWEP.Purpose			= ""
