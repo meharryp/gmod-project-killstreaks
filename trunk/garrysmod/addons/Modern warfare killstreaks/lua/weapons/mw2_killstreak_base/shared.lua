@@ -1,5 +1,5 @@
 
-local ModelExsists			= file.Exists("../models/weapons/v_slam.mdl")
+local ModelExsists			= file.Exists("../models/weapons/v_slaam.mdl")
 if ( CLIENT ) then
 	SWEP.Author				= "Death dealer142"
 	SWEP.Purpose			= ""
@@ -99,8 +99,13 @@ function SWEP:Deploy()
 			end
 		else
 			if self.CallOnce then
-				timer.Simple(1, self, self.Run);
+				self:Run();
+				--timer.Simple(1, self.Run, self);				
 				self.CalledIn = true;
+				if !self.DelaySound  then
+					self:PlaySound();
+				end
+				--timer.Simple(1, self.Run, self)
 				self:Holster();
 				self.CallOnce = false;			
 			end
