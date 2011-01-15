@@ -117,6 +117,8 @@ local function setImage(picTab, value, insert)
 	setLabels(killNumLabels,numTab)
 end
 
+local DermaFrame;
+
 function MW2KillstreakChooseFrame()
 	local select3 = 0;
 	local selectedNums = 0;
@@ -124,7 +126,7 @@ function MW2KillstreakChooseFrame()
 	local buttonHeight, buttonSpaceing = 30, 5;
 	local buttonWidth, buttonX = 100, 10;	
 	
-	local DermaFrame = vgui.Create( "DFrame" )
+	DermaFrame = vgui.Create( "DFrame" )
 		DermaFrame:SetPos( centerX,centerY )
 		DermaFrame:SetSize( width, height )
 		DermaFrame:SetTitle( "MW2 Killstreaks" )
@@ -132,7 +134,6 @@ function MW2KillstreakChooseFrame()
 		DermaFrame:SetDraggable( true )
 		DermaFrame:ShowCloseButton( true )
 		DermaFrame:MakePopup()
-	
 	local PropertySheet = vgui.Create( "DPropertySheet" )
 		PropertySheet:SetParent( DermaFrame )
 		PropertySheet:SetPos( 5, 30 )
@@ -350,11 +351,23 @@ function MW2UserVars(frame)
 	if nuke then
 		nukeOwner:SetValue(true)
 	end
-	nukeOwner:SetPos( 10, 50)
+	nukeOwner:SetPos( 10, 10)
 	
 	nukeOwner:SizeToContents()
 	nukeOwner.OnChange = function()
 		nuke = nukeOwner:GetChecked()
+	end	
+	
+	local nX, nY = nukeOwner:GetPos();
+	local sentryTracer = vgui.Create("DCheckBoxLabel", OptionPanel)
+	sentryTracer:SetText("Show laser on Sentry")
+	if LocalPlayer():GetVar("ShowSentryLaser", false) then
+		sentryTracer:SetValue(true)
+	end
+	sentryTracer:SetPos( nX, nY + 20);
+	sentryTracer:SizeToContents()
+	sentryTracer.OnChange = function()		
+		LocalPlayer():SetVar("ShowSentryLaser", sentryTracer:GetChecked() )
 	end	
 	
 	local setButton = vgui.Create("DButton", OptionPanel)
@@ -363,6 +376,7 @@ function MW2UserVars(frame)
 	setButton:SetPos( OptionPanel:GetWide()/2 - setButton:GetWide()/2, OptionPanel:GetTall() - setButton:GetTall() - 5 )
 	setButton.DoClick = function()
 		datastream.StreamToServer( "setMW2PlayerVars", {nuke} )
+		DermaFrame:Close();
 	end
 
 	OptionPanel.Paint = function() -- Paint function
