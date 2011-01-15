@@ -7,24 +7,33 @@ local height = 10
 local x = ScrW()/2 - fullWidth/2
 local y = ScrH()/2 - height/2
 local offset = 4
-local DisFromCrate = CreateConVar ("Supply_CrateDistance", "75")
+--local DisFromCrate = CreateConVar ("Supply_CrateDistance", "75")
 local setHook = false
 
+local Laser = Material( "cable/redlaser" )
 
 function ENT:Draw()
 	
 	self.Entity:DrawModel()	
 	
-	if lpl == nil then
+	if lpl == nil then		
 		return;
 	end
-	
-	local team = lpl:GetNetworkedString("MW2TeamSound");
-	--MsgN("team = " .. team )
-	local str;
-	if str == nil then
-		--return 
+	if lpl:GetVar("ShowSentryLaser", false) then
+		local barrel = self:GetAttachment(self:LookupAttachment(self.BarrelAttachment))	
+		local sPos = barrel.Pos
+		local sAng = barrel.Ang
+		MsgN(self:GetPoseParameter("aim_pitch"))
+		local ang = Angle( self:GetPoseParameter("aim_pitch"), barrel.Ang.y, 0):Forward()
+		
+		local tracePos = util.QuickTrace( sPos, ang * self.Dis, self )
+		local hit = tracePos.HitPos
+		
+		render.SetMaterial( Laser )
+		render.DrawBeam( sPos, hit, 5, 0, 0, Color( 255, 255, 255, 255 ) ) 
 	end
+	local team = lpl:GetNetworkedString("MW2TeamSound");
+	local str;
 	if team == "1" then
 		str = "militia";
 	elseif team == "2" then
