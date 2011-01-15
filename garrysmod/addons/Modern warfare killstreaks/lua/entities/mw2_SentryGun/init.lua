@@ -3,6 +3,7 @@ include( 'shared.lua' )
 local disToTurret = 50
 local TracerType = CreateConVar("SentryGun_Tracer","HelicopterTracer")
 local enemys = {"npc_combine_s", "npc_poisonzombie", "NPC npc_zombie*", "npc_zombine", "npc_fastzombie*", "npc_antlion*", "npc_hunter" };
+local Sentrys = {};
 
 -- disables after 90 seconds
 ENT.Placed = false;
@@ -59,13 +60,7 @@ function ENT:Think()
 			self:NoTarget()
 		end
 		--[[
-		local tempEnemys = {};
-		for k, v in ipairs(enemys) do
-			tempEnemys = ents.FindByClass(v);
-			for j, l in ipairs(tempEnemys) do
-				l:AddEntityRelationship(self, D_HT, 999 )
-			end
-		end
+		
 		]]
 		local ConeEnts = ents.FindInCone(self:GetPos(), self:GetAngles():Forward(), 1500, 90)	
 		
@@ -120,7 +115,7 @@ function ENT:Think()
 				
 				if self.EngageDelay <= CurTime() then
 					self:EngageTarget(self.pitch, self.yaw);
-					self.EngageDelay = CurTime() + .15
+					self.EngageDelay = CurTime() + .07 -- Fire delay
 				end							
 			else			
 				self:NoTarget()
@@ -144,7 +139,7 @@ end
 function ENT:Initialize()	
 
 	self.Owner = self.Entity:GetVar("owner")	
-	self:SetModel( "models/mw2_sentry.mdl" );
+	self:SetModel( "models/mw2_sentry/sentry_gun.mdl" );
 	
 	self:SetPos( self.Owner:GetPos() + ( self.Owner:GetForward() * 50 ) )
 	self:SetAngles( Angle(0, self.Owner:GetAimVector():Angle().y, 0) )
@@ -176,6 +171,8 @@ function ENT:Initialize()
 	umsg.Start("setMW2SentryGunOwner", self.Owner);
 		umsg.Entity(self.Owner);
 	umsg.End()
+	self:SetDisposition();
+	table.insert(Sentrys,self.bullseye);
 end
 
 function ENT:KillBullseye(ent)
@@ -227,6 +224,12 @@ end
 function ENT:Destroy()
 	if self.Dead then return end
 	self.Dead = true;
+	for k, v in pairs(Sentrys) do
+		if v == self.bullseye then
+			table.remove(Sentrys, k);
+			break;
+		end
+	end
 	local ParticleExplode = ents.Create("info_particle_system")
 	ParticleExplode:SetPos(self:GetAttachment(self:LookupAttachment( "smoke_particle" )).Pos  )
 	ParticleExplode:SetKeyValue("effect_name", "smoke_burning_engine_01")
@@ -257,3 +260,20 @@ function ENT:OnTakeDamage(dmg)
 function ENT:PreDeploy()
 	self:ResetSequence( self:LookupSequence( "Predeploy" ) )
 end
+
+function ENT:SetDisposition()
+	local tempEnemys = {};
+		for k, v in ipairs(enemys) do
+			tempEnemys = ents.FindByClass(v);
+			for j, l in ipairs(tempEnemys) do
+				l:AddEntityRelationship(self.bullseye, D_HT, 99 )
+			end
+		end
+end
+function SetDisOnSentrys(pl, npc) -- When an enemy npc spawns, will set their disposition to hate all sentrys.
+	for k, v in ipairs(Sentrys) do
+		npc:AddEntityRelationship(v, D_HT, 99 )
+	end
+end
+
+hook.Add("PlayerSpawnedNPC", "SetDisOnSentrys", SetDisOnSentrys);
