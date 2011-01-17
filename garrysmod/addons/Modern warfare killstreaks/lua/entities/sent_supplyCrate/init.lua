@@ -4,7 +4,7 @@ AddCSLuaFile( "cl_init.lua" )
 include( 'shared.lua' )
 IncludeClientFile("cl_init.lua")
 
-local MW2Killstreaks = { "ammo", "uav", "mw2_counter_uav", "predator_missile", "mw2_sentry_gun", "precision_airstrike", "harrier", "stealth_bomber", "ac-130" };
+local MW2Killstreaks = { "ammo", "uav", "mw2_counter_uav", "predator_missile", "mw2_sentry_gun", "precision_airstrike", "harrier", "stealth_bomber", "ac-130", "mw2_EMP" };
 
 local ammoSlot = 1;
 local uavSlot = 2;
@@ -18,7 +18,7 @@ local stealthSlot = 8;
 local paveSlot = stealthSlot;
 local acSlot = 9;
 local chopperSlot = acSlot;
-local empSlot = acSlot;
+local empSlot = 10;
 
 ENT.Players = {}
 ENT.GiveReward = false;

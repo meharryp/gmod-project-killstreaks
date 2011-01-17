@@ -67,6 +67,7 @@ function ENT:Initialize()
 	self:RunUAV();	
 	
 	IsUAVActive = true;
+	self:GetVar("Weapon"):PlaySound();
 end
 
 function ENT:RunUAV()
