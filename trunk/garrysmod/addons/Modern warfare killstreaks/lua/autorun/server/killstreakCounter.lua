@@ -86,10 +86,10 @@ function checkKills(ply)
 		addKillStreak(ply,"mw2_Counter_UAV");
 	elseif kills == 5 && canUseStreak(ply, "Predator missile") then 
 		addKillStreak(ply,"predator_missile");
-		
+	elseif kills == 5 && canUseStreak(ply, "Sentry Gun") then 
+		addKillStreak(ply,"mw2_sentry_gun_package");
 	elseif kills == 6 && canUseStreak(ply, "Precision Airstrike")	then 
-		addKillStreak(ply,"precision_airstrike");
-		
+		addKillStreak(ply,"precision_airstrike");		
 	elseif kills == 7 && canUseStreak(ply, "Harrier") then 
 		addKillStreak(ply,"harrier");
 	elseif kills == 8  && canUseStreak(ply, "Emergency Airdrop") then 
@@ -98,7 +98,8 @@ function checkKills(ply)
 		addKillStreak(ply,"stealth_bomber");
 	elseif kills == 11 && canUseStreak(ply, "AC-130") then 
 		addKillStreak(ply,"ac-130");
---	elseif kills == 15 then 
+	elseif kills == 15 && canUseStreak(ply, "EMP") then 
+		addKillStreak(ply,"mw2_EMP");
 	elseif MW2AllowUseOfNuke:GetInt() == 1 && kills == 25 && canUseStreak(ply, "Nuke") then 
 		addKillStreak(ply,"tactical_Nuke");		
 	end

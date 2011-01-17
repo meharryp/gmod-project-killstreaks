@@ -4,7 +4,7 @@ local height = 250;
 local centerX = ScrW()/2 - width/2
 local centerY = ScrH()/2 - height/2
 local killstreaks = {{"UAV", 3, "uav"}, {"Care Package", 4, "care_package"}, {"Counter UAV", 4, "mw2_Counter_UAV"}, {"Sentry Gun", 5, "mw2_sentry_gun"}, {"Predator missile", 5, "predator_missile"}, {"Precision Airstrike", 6, "precision_airstrike"},
-					 {"Harrier", 7, "harrier"}, {"Emergency Airdrop", 8, "Emergency_Airdrop"}, {"Stealth bomber", 9, "stealth_bomber"}, {"AC-130", 11, "ac-130"}, {"EMP", 15, ""}, {"Nuke", 25, "Tactical_Nuke"}}
+					 {"Harrier", 7, "harrier"}, {"Emergency Airdrop", 8, "Emergency_Airdrop"}, {"Stealth bomber", 9, "stealth_bomber"}, {"AC-130", 11, "ac-130"}, {"EMP", 15, "mw2_EMP"}, {"Nuke", 25, "Tactical_Nuke"}}
 local texturePath = "VGUI/entities/"
 local killNumLabels = {}
 
