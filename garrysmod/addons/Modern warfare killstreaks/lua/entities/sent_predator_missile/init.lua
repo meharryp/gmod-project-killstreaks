@@ -106,7 +106,9 @@ function ENT:PhysicsCollide( data, physobj )
 		GAMEMODE:SetPlayerSpeed(self.Owner, self.playerSpeeds[1], self.playerSpeeds[2])
 		umsg.Start("Predator_missile_RemoveHUD", self.Owner);
 		umsg.End();
-		self.Wep:CallIn();
+		if IsValid(self.Wep) then
+			self.Wep:CallIn();
+		end
 	end
 end
 

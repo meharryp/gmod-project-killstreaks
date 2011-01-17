@@ -72,7 +72,7 @@ function ENT:Remove_EMP()
 			v:SetNoTarget(false)
 		end		
 	end
-	
+	MW2_KillStreaks_EMP_Team = -1;
 	self:Remove();
 end
 

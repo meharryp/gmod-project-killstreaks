@@ -195,7 +195,9 @@ function ENT:Initialize()
 		MsgN("The AC-130 was not of this world, and so had to be sent off to kill other bad guys who are of it's world")
 		umsg.Start("AC_130_Error", self.Owner);
 		umsg.End();
-		self.Wep:CallIn();
+		if IsValid(self.Wep) then
+			self.Wep:CallIn();
+		end
 		return;
 	end
 	
@@ -367,7 +369,9 @@ function ENT:RemoveAC130()
 	self.StayAlive = false;
 	constraint.NoCollide( self, GetWorldEntity(), 0, 0 );	
 	self.Owner:GetActiveWeapon().MouseSensitivity = 1;
-	self.Wep:CallIn();
+	if IsValid(self.Wep) then
+		self.Wep:CallIn();
+	end
 	self.Owner:SetAngles(self.PlayerAng);
 end
 

@@ -55,7 +55,9 @@ function ENT:PhysicsUpdate()
 			
 			self.Owner:SetViewEntity(self.Owner);
 			GAMEMODE:SetPlayerSpeed(self.Owner, self.playerSpeeds[1], self.playerSpeeds[2])
-			self.Wep:CallIn();
+			if IsValid(self.Wep) then
+				self.Wep:CallIn();
+			end
 			self.Owner:SetAngles(self.playerAng)
 			umsg.Start("Harrier_Strike_RemoveHUD", self.Owner);
 			umsg.End();
