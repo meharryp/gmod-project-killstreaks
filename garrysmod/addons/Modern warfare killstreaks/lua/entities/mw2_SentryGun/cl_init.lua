@@ -23,7 +23,6 @@ function ENT:Draw()
 		local barrel = self:GetAttachment(self:LookupAttachment(self.BarrelAttachment))	
 		local sPos = barrel.Pos
 		local sAng = barrel.Ang
-		MsgN(self:GetPoseParameter("aim_pitch"))
 		local ang = Angle( self:GetPoseParameter("aim_pitch"), barrel.Ang.y, 0):Forward()
 		
 		local tracePos = util.QuickTrace( sPos, ang * self.Dis, self )
@@ -32,8 +31,18 @@ function ENT:Draw()
 		render.SetMaterial( Laser )
 		render.DrawBeam( sPos, hit, 5, 0, 0, Color( 255, 255, 255, 255 ) ) 
 	end
+	
+	--[[
+	local vec1 = lpl:GetNetworkedVector("SentryGunLOSHit", nil);
+	if vec1 != nil then
+		render.SetMaterial( Laser )
+		local barrel = self:GetAttachment(self:LookupAttachment(self.BarrelAttachment))	
+		--render.DrawBeam( self:LocalToWorld(self:OBBCenter()), vec1 , 5, 0, 0, Color( 255, 255, 255, 255 ) ) 
+		render.DrawBeam( barrel.Pos, vec1 , 5, 0, 0, Color( 255, 255, 255, 255 ) ) 
+	end
+	]]
 	local team = lpl:GetNetworkedString("MW2TeamSound");
-	local str;
+	local str = "";
 	if team == "1" then
 		str = "militia";
 	elseif team == "2" then
@@ -45,7 +54,9 @@ function ENT:Draw()
 	elseif team == "5" then
 		str = "tf141";
 	end
-	
+	if string.len(str) < 1 then
+		return;
+	end
 	local tex = surface.GetTextureID("models/deathdealer142/supply_crate/" .. str)
 	
 	local wlh = getEntityWidthLengthHeight(self)

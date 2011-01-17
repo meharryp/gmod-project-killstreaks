@@ -16,7 +16,7 @@ ENT.LifeTimer = CurTime();
 ENT.FadeTimer = CurTime();
 ENT.yaw = 0;
 ENT.pitch = 0;
-ENT.OurHealth = 500;
+ENT.OurHealth = 200;
 ENT.AutomaticFrameAdvance = true;
 ENT.Dead = false;
 
@@ -31,6 +31,7 @@ ENT.InitialTurnDelay = CurTime();
 ENT.SnapToDelay = CurTime();
 ENT.TurnAmount = 1;
 ENT.TurnFactor = 1;
+ENT.ShouldSearch = false;
 
 function ENT:Think()
 	self:NextThink(CurTime());  
@@ -66,30 +67,26 @@ function ENT:Think()
 	
 	if self.Placed then
 		self:Search();
-		if self.Target != nil && !self.Target:IsValid() then
+		--[[
+		if !IsValid(self.Target) then
 			self:NoTarget()
 		end
-
-		--local ConeEnts = ents.FindInCone(self:GetPos(), self:GetAngles():Forward(), self.Dis, 90)	
-		local ConeEnts = ents.FindInCone(self:GetAttachment(self:LookupAttachment(self.BarrelAttachment)).Pos - (self:GetForward() * -50), self:GetAngles():Forward(), self.Dis, 90)	
+]]
+		local ConeEnts = ents.FindInCone(self:LocalToWorld(self:OBBCenter()) + (self:GetForward() * -50), self:GetAngles():Forward(), self.Dis, 90)	
+		--local ConeEnts = ents.FindInCone(self:GetAttachment(self:LookupAttachment(self.BarrelAttachment)).Pos - (self:GetForward() * -50), self:GetAngles():Forward(), self.Dis, 90)	
 		
 		if self.Target == nil then
 			
 			for i, pEnt in ipairs(ConeEnts) do
 				if pEnt:IsNPC() && pEnt:GetClass() != "npc_bullseye" then
 					local ang = ( pEnt:GetPos() - self:GetPos() ):Angle()
-					local yaw = ang.y - self:GetAngles().y;
-					if yaw > 60 then
-						yaw = ang.y - 360
-					end
-					
-					local pitch = ang.p					
-					if pitch > 45 then
-						pitch = ang.p - 360
-					end
+					local yaw = math.NormalizeAngle( ang.y - self:GetAngles().y );
+
+					local pitch = math.NormalizeAngle(ang.p)
 				 
-					if (pitch < 45 && pitch > -45) && ( yaw < 60 && yaw > -60 ) then
+					if (pitch <= 45 && pitch >= -45) && ( yaw <= 60 && yaw >= -60 ) && self:HasLOS(pEnt) then
 					  self.Target = pEnt;
+					  --self.Owner:SetNetworkedBool("SentryGunTargetLocated", true)
 					  self.yaw = self.CurYaw
 					  break;
 					end
@@ -98,93 +95,81 @@ function ENT:Think()
 		end
 		
 		if IsValid(self.Target) && !table.HasValue(ConeEnts,self.Target) then -- This is to check to see if the target does exist, but is out side of our line of site
-			self:NoTarget()
+			self:NoTarget()		
 		end
 		
-		if IsValid(self.Target) then
+		if IsValid(self.Target) && self:HasLOS(self.Target) then
 			--Engage Target Here
-			if self.AimDelay <= CurTime() then
-				local ang = ( self.Target:GetPos() - self:GetPos() ):Angle()
-				--[[
-				self.yaw = ang.y - self:GetAngles().y;
-				if self.yaw > 60 then
-					self.yaw = ang.y - 360
-				end
-				]]
-				local vec1 = self.Target:GetPos() - self:GetPos();
-				local ang1 = vec1:Angle().y - self:GetAngles().y
-				
-				if ang1 > 60 then
-					ang1 = ang1 - 360
-				end
-				ang1 = math.Clamp( ang1 , -60, 60 )
-				
-				local diff = ang1 - self.yaw;
-				
-				if diff > -1 && diff < 1 then
-					self.TurnFactor = .05;
-				else
-					self.TurnFactor = 1;
-				end
-				
-				if ang1 > self.yaw && ang1 < 60 then
-					self.yaw = self.yaw + (self.TurnAmount * self.TurnFactor);
-				elseif ang1 < self.yaw && ang1 > -60 then
-					self.yaw = self.yaw - (self.TurnAmount * self.TurnFactor);
-				end
-								
-				self:SetPoseParameter("aim_yaw", self.yaw )
-				
-				--self.pitch = ang.p //- self:GetAngles().p;
-				
-				self.pitch = ( vec1:Angle().p - self:GetAngles().p )
-				
-				if self.pitch > 45 then
-					self.pitch = ang.p - 360
-				end
-				self.pitch = math.Clamp( self.pitch , -45, 45 )
-				
-				//self.Owner:ChatPrint(self.yaw)
-				self.AimDelay = CurTime() + 0									
-			end				
+			self.ShouldSearch = true;
+			local ang = ( self.Target:GetPos() - self:GetPos() ):Angle()
+			local vec1 = self.Target:GetPos() - self:GetPos();
+			local ang1 = math.NormalizeAngle( vec1:Angle().y - self:GetAngles().y )			
+			ang1 = math.Clamp( ang1 , -60, 60 )
+			
+			local diff = ang1 - self.yaw;			
+			--[[
+			self.Owner:SetNetworkedString("SentryGunYawDebug", tostring(ang1));
+			self.Owner:SetNetworkedVector("SentryGunSPosDebug", self:GetPos());
+			self.Owner:SetNetworkedAngle("SentryGunSAngDebug", self:GetAngles());
+			self.Owner:SetNetworkedVector("SentryGunTPosDebug", self.Target:GetPos());
+			]]
+			if diff > -1 && diff < 1 then
+				self.TurnFactor = .05;
+			else
+				self.TurnFactor = 1;
+			end
+			
+			if ang1 > self.yaw && ang1 < 60 then
+				self.yaw = self.yaw + (self.TurnAmount * self.TurnFactor);
+			elseif ang1 < self.yaw && ang1 > -60 then
+				self.yaw = self.yaw - (self.TurnAmount * self.TurnFactor);
+			end
+							
+			self:SetPoseParameter("aim_yaw", self.yaw )			
+			
+			self.pitch = math.NormalizeAngle( vec1:Angle().p - self:GetAngles().p )
+			self.pitch = math.Clamp( self.pitch , -45, 45 )					
 			
 			if (self.pitch < 45 && self.pitch > -45) && ( self.yaw < 60 && self.yaw > -60 ) then
 				self:SetPoseParameter("aim_pitch", self.pitch )
-				--self:SetPoseParameter("aim_yaw", self.yaw )
 				
-				if self:FocusedOnTarget(ConeEnts) then										
-					if self.EngageDelay <= CurTime() then
-						self:EngageTarget(self.pitch, self.yaw);
-						self.EngageDelay = CurTime() + .07 -- Fire delay
-					end
+				if self.EngageDelay <= CurTime() then
+					self:EngageTarget(self.pitch, self.yaw);
+					self.EngageDelay = CurTime() + .07 -- Fire delay
 				end
 			else			
 				self:NoTarget()
 			end
+		elseif self.ShouldSearch then
+			self.ShouldSearch = false;
+			self:NoTarget()
 		end
 	end
 	if self.LifeTimer <= CurTime() then
 		self:Destroy();
 	end
-	
 	return true;
 end
 
 function ENT:NoTarget()
 	self.Target = nil;
+	--self.Owner:SetNetworkedBool("SentryGunTargetLocated", false)
 	self:SetPoseParameter("aim_pitch", 0 )
 	self.CurYaw = self:GetPoseParameter("aim_yaw")
 	self.InitialTurnDelay = CurTime() + 1;
 end
-
-function ENT:FocusedOnTarget(ents)
+ 
+function ENT:HasLOS(tar)
 	
+	local ang = (tar:GetPos() - self:GetPos() ):Normalize()
 	local barrel = self:GetAttachment(self:LookupAttachment(self.BarrelAttachment))	
-	local ang = Angle( self.pitch, barrel.Ang.y, 0):Forward()
-	local traceRes = util.QuickTrace( barrel.Pos, ang * self.Dis, {self, self.bullseye })
-	local ent = traceRes.Entity;
 	
-	if IsValid(self.Target) && (ent == self.Target || ( table.HasValue(ents,ent) && ent:IsNPC() )) then
+	--local traceRes = util.QuickTrace( self:LocalToWorld(self:OBBCenter()), ang * self.Dis, {self, self.bullseye })
+	local traceRes = util.QuickTrace( barrel.Pos, ang * self.Dis, {self, self.bullseye })
+		--self.Owner:SetNetworkedVector("SentryGunLOSHit", traceRes.HitPos);
+	local ent = traceRes.Entity;
+		--self.Owner:SetNetworkedEntity("SentryGunTracedEnt", ent);
+	if ent:IsNPC() || ent:IsPlayer() then
 		return true;
 	end
 	return false;
@@ -259,11 +244,13 @@ function ENT:StartFireing()
 end
 
 function ENT:Search()
-	if self.Target != nil then
+	if IsValid(self.Target) then
 		self.CurYaw = 0;
+		--self.Owner:SetNetworkedBool("SentryGunSearching", false);
 		return; 
-	end
+	end	
 	if self.InitialTurnDelay > CurTime() then return; end
+	--self.Owner:SetNetworkedBool("SentryGunSearching", true);
 	if self.TurnDelay <= CurTime() then
 		self:SetPoseParameter("aim_yaw", self.CurYaw )
 		self.CurYaw = self.CurYaw + ( 1 * self.Direction );
