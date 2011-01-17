@@ -58,6 +58,7 @@ function ENT:Initialize()
 			v:SetNoTarget(true)
 	    end
 	end
+	self:GetVar("Weapon"):PlaySound();
 end
 
 function ENT:GetTeam()
