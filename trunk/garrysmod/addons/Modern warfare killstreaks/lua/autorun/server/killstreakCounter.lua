@@ -140,8 +140,9 @@ end
 
 function useKillStreak(player, command, arguments ) -- command for the user to use the kill streaks they have aquired.
 
-	if MW2_KillStreaks_EMP_Team != -1 && player:Team() == MW2_KillStreaks_EMP_Team then
+	if MW2_KillStreaks_EMP_Team != -1 && player:Team() != MW2_KillStreaks_EMP_Team then
 		--Print out that the killstreaks are temp. unavlible
+		player:ChatPrint("Killstreaks are temp. unavlible");
 		return;
 	end
 
