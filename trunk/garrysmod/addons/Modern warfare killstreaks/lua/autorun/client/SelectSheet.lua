@@ -299,7 +299,11 @@ function MW2KillstreakChooseFrame()
 	
 	PropertySheet:AddSheet( "Killstreak Menu", DermaPanel, "gui/silkicons/user", false, false, "Select your Killstreaks here" )	
 	PropertySheet:AddSheet( "Team Menu", MW2TeamsTab(DermaPanel), "gui/silkicons/group", false, false, "Select your Team here" )
-	PropertySheet:AddSheet( "Team Menu", MW2UserVars(DermaPanel), "gui/silkicons/user", false, false, "Set Your options" )
+	PropertySheet:AddSheet( "User Vars", MW2UserVars(DermaPanel), "gui/silkicons/user", false, false, "Set Your options" )
+	local pan = UpdateFrame(DermaPanel);
+	if pan != nil then
+		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/user", false, false, "Check for Updates" )
+	end
 end
 
 function MW2TeamsTab(frame)
@@ -314,7 +318,7 @@ function MW2TeamsTab(frame)
 	local numButtons = 0;
 	local MW2Voices = {"militia", "seals", "opfor", "rangers", "tf141"}
 	local t = LocalPlayer():Team() - 1;
-	
+	--MsgN("Team = " .. tostring(t))
 	for k,v in ipairs(MW2Voices) do
 	
 		local myButton = vgui.Create("DImageButton", ButtonPanel)
@@ -385,6 +389,69 @@ function MW2UserVars(frame)
 	end
 	
 	return OptionPanel;
+end
+local serverVer = -1;
+function UpdateFrame(frame)
+	local dir = "addons/Modern warfare killstreaks/.svn/entries";
+	local userVer = "";
+	
+	if file.Exists(dir, true) then
+		userVer =  string.Explode("\n", file.Read( dir, true) or "")[4]
+	else
+		return nil;
+	end
+	local mes1 = "You have version " .. userVer .. "\nThe current version is "
+	local VersionPanel = vgui.Create( "DPanel", frame)
+		VersionPanel:SetPos( 5, 30)
+		VersionPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 40 )
+		VersionPanel.Paint = function() -- Paint function
+			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+			surface.DrawRect( 0, 0, VersionPanel:GetWide(), VersionPanel:GetTall() ) -- Draw the rect
+		end
+	local DisplayPanel = vgui.Create( "DPanel", VersionPanel)
+		DisplayPanel:SetPos( 5, 5)
+		DisplayPanel:SetSize( DisplayPanel:GetParent():GetWide() - 10, 60 )
+		DisplayPanel._BGColor = Color(75,75,75,255)
+		DisplayPanel.Paint = function() -- The paint function		
+			draw.RoundedBox( 4, 0, 0, DisplayPanel:GetWide(), DisplayPanel:GetTall(), DisplayPanel._BGColor )
+		end
+	local myLabel= vgui.Create("DLabel", DisplayPanel)
+		myLabel:SetText(mes1)
+		myLabel:SetPos(10,10)
+		myLabel:SizeToContents()
+		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+	local setButton = vgui.Create("DButton", VersionPanel)
+		setButton:SetText("Set")	
+		setButton:SetSize(50,30)
+		setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
+		setButton.DoClick = function()			
+			http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/","",function(contents,size)
+					serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
+					paintPane()
+			end)			
+		end			
+		function paintPane()
+			local ver = tonumber(userVer)
+			local mes2 = serverVer .. "\n"
+			if ver < serverVer then --When the user has an outdated version
+				DisplayPanel._BGColor = Color(185,75,75, 255)
+				myLabel:SetColor( Color(0,0,0,255) )
+				mes2 = mes2 .. "You don't have the most upto date version of the MW2 Killstreaks\nPlease go and update the SVN"
+				DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 10)
+			elseif ver == serverVer then --When the user is up to date
+				DisplayPanel._BGColor = Color(75,185,75, 255)
+				myLabel:SetColor( Color(0,0,0,255) )
+				mes2 = mes2 .. "You have the most current version of the MW2 Killstreaks"
+			else --When the user has a higher version then the server, which shouldn't happen
+			end
+			myLabel:SetText(mes1 .. mes2)
+			myLabel:SizeToContents()
+			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+		end
+		if serverVer > 0 then
+			paintPane(serverVer)
+		end
+	return VersionPanel;
 end
 
 concommand.Add("OpenKillstreakWindow", MW2KillstreakChooseFrame)
