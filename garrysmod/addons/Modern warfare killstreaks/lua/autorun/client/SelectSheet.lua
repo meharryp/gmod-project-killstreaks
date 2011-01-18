@@ -299,10 +299,10 @@ function MW2KillstreakChooseFrame()
 	
 	PropertySheet:AddSheet( "Killstreak Menu", DermaPanel, "gui/silkicons/user", false, false, "Select your Killstreaks here" )	
 	PropertySheet:AddSheet( "Team Menu", MW2TeamsTab(DermaPanel), "gui/silkicons/group", false, false, "Select your Team here" )
-	PropertySheet:AddSheet( "User Vars", MW2UserVars(DermaPanel), "gui/silkicons/user", false, false, "Set Your options" )
+	PropertySheet:AddSheet( "User Vars", MW2UserVars(DermaPanel), "gui/silkicons/wrench", false, false, "Set Your options" )
 	local pan = UpdateFrame(DermaPanel);
 	if pan != nil then
-		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/user", false, false, "Check for Updates" )
+		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/world", false, false, "Check for Updates" )
 	end
 end
 
@@ -392,11 +392,20 @@ function MW2UserVars(frame)
 end
 local serverVer = -1;
 function UpdateFrame(frame)
-	local dir = "addons/Modern warfare killstreaks/.svn/entries";
+	local fi = "lua/autorun/server/killstreakCounter.lua";
+	local dir = nil;
 	local userVer = "";
+	local addons = file.FindDir("addons/*", true);
 	
-	if file.Exists(dir, true) then
-		userVer =  string.Explode("\n", file.Read( dir, true) or "")[4]
+	for k,v in ipairs(addons) do
+		if file.Exists("addons/" .. v .. "/" .. fi, true) then 
+			dir = "addons/" .. v .. "/.svn/entries";
+			break;
+		end
+	end
+	
+	if dir != nil then
+		userVer =  string.Explode("\n", file.Read( dir, true) )[4]
 	else
 		return nil;
 	end
@@ -421,9 +430,12 @@ function UpdateFrame(frame)
 		myLabel:SizeToContents()
 		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
 	local setButton = vgui.Create("DButton", VersionPanel)
-		setButton:SetText("Set")	
-		setButton:SetSize(50,30)
-		setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
+		setButton:SetText("Check SVN Version")	
+		setButton:SetSize(100,30)
+		--setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
+		local x,y = DisplayPanel:GetPos()
+		setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
+		
 		setButton.DoClick = function()			
 			http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/","",function(contents,size)
 					serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
@@ -447,6 +459,8 @@ function UpdateFrame(frame)
 			myLabel:SetText(mes1 .. mes2)
 			myLabel:SizeToContents()
 			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+			x,y = DisplayPanel:GetPos()
+			setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
 		end
 		if serverVer > 0 then
 			paintPane(serverVer)
