@@ -19,8 +19,8 @@ function playerJoin(ply) --when a player joins the server initailizes the nessac
 	ply:ConCommand("OpenKillstreakWindow")
 	ply.FirstSpawn = true;
 	local teamNum = math.random(1,5)
-	ply:SetNetworkedString("MW2TeamSound", tostring( teamNum ))
 	ply:SetTeam(teamNum);
+	ply:SetNetworkedString("MW2TeamSound", tostring( teamNum ))	
 	ply:SetNetworkedBool("MW2AC130ThermalView", true) 
 end
 
