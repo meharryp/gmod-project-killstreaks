@@ -119,7 +119,175 @@ end
 
 local DermaFrame;
 
-function MW2KillstreakChooseFrame()
+local function MW2TeamsTab(frame)
+	local ButtonPanel = vgui.Create( "DPanel" )
+	ButtonPanel:SetPos( 0, 0)
+	ButtonPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 31 )
+	ButtonPanel:SetPaintBackground(false)
+	
+	local buttonSize = 64
+	local buttonSpaceing = (ButtonPanel:GetTall() - (buttonSize * 5) ) /  5
+	local buttonX, buttonY = frame:GetWide()/2 - buttonSize/2, 10;
+	local numButtons = 0;
+	local MW2Voices = {"militia", "seals", "opfor", "rangers", "tf141"}
+	local t = LocalPlayer():Team() - 1;
+	--MsgN("Team = " .. tostring(t))
+	for k,v in ipairs(MW2Voices) do
+	
+		local myButton = vgui.Create("DImageButton", ButtonPanel)
+		myButton:SetMaterial( "models/deathdealer142/supply_crate/" .. MW2Voices[k] )
+		myButton:SetPos( buttonX, (buttonSize * numButtons) + (buttonSpaceing * numButtons) + buttonY );
+		myButton:SetSize(buttonSize, buttonSize)
+		myButton.DoClick = function()
+			t = k - 1;
+			datastream.StreamToServer( "SetMw2Voices", {k} )		
+		end
+		numButtons = numButtons + 1
+	end
+	ButtonPanel.Paint = function() -- Paint function
+		surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+		surface.DrawRect( 0, 0, ButtonPanel:GetWide(), ButtonPanel:GetTall() ) -- Draw the rect	
+		
+		local y = (buttonSize * t) + (buttonSpaceing * t) + buttonY
+		surface.SetDrawColor( 150, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+		surface.DrawOutlinedRect( buttonX, y, 64, 64 ) -- Draw the rect
+	end
+	return ButtonPanel;
+end
+
+local function MW2UserVars(frame)
+	local OptionPanel = vgui.Create( "DPanel")
+	OptionPanel:SetPos( 0, 0)
+	OptionPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 31 )
+	OptionPanel:SetPaintBackground(false)
+	
+	local nuke = LocalPlayer():GetNetworkedBool("MW2NukeEffectOwner") or false;
+	
+	local nukeOwner = vgui.Create("DCheckBoxLabel", OptionPanel)
+	nukeOwner:SetText("Nuke effects owner")
+	if nuke then
+		nukeOwner:SetValue(true)
+	end
+	nukeOwner:SetPos( 10, 10)
+	
+	nukeOwner:SizeToContents()
+	nukeOwner.OnChange = function()
+		nuke = nukeOwner:GetChecked()
+	end	
+	
+	local nX, nY = nukeOwner:GetPos();
+	local sentryTracer = vgui.Create("DCheckBoxLabel", OptionPanel)
+	sentryTracer:SetText("Show laser on Sentry")
+	if LocalPlayer():GetVar("ShowSentryLaser", false) then
+		sentryTracer:SetValue(true)
+	end
+	sentryTracer:SetPos( nX, nY + 20);
+	sentryTracer:SizeToContents()
+	sentryTracer.OnChange = function()		
+		LocalPlayer():SetVar("ShowSentryLaser", sentryTracer:GetChecked() )
+	end	
+	
+	local setButton = vgui.Create("DButton", OptionPanel)
+	setButton:SetText("Set")	
+	setButton:SetSize(50,30)
+	setButton:SetPos( OptionPanel:GetWide()/2 - setButton:GetWide()/2, OptionPanel:GetTall() - setButton:GetTall() - 5 )
+	setButton.DoClick = function()
+		datastream.StreamToServer( "setMW2PlayerVars", {nuke} )
+		DermaFrame:Close();
+	end
+
+	OptionPanel.Paint = function() -- Paint function
+		surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+		surface.DrawRect( 0, 0, OptionPanel:GetWide(), OptionPanel:GetTall() ) -- Draw the rect
+	end
+	
+	return OptionPanel;
+end
+
+local function getClientVersion()
+	local fi = "lua/autorun/server/killstreakCounter.lua";
+	local dir = nil;	
+	local addons = file.FindDir("addons/*", true);
+	
+	for k,v in ipairs(addons) do
+		if file.Exists("addons/" .. v .. "/" .. fi, true) then 
+			dir = "addons/" .. v .. "/.svn/entries";
+			break;
+		end
+	end
+	
+	if dir != nil && file.Exists(dir,true) then
+		return tonumber(string.Explode("\n", file.Read( dir, true) )[4] )
+	else
+		return nil;
+	end
+end
+
+local serverVer = -1;
+local userVer = getClientVersion();
+
+local function UpdateFrame(frame)
+	if userVer == nil then return end
+	local mes1 = "You have version " .. userVer .. "\nThe current version is "
+	local VersionPanel = vgui.Create( "DPanel", frame)
+		VersionPanel:SetPos( 5, 30)
+		VersionPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 40 )
+		VersionPanel.Paint = function() -- Paint function
+			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+			surface.DrawRect( 0, 0, VersionPanel:GetWide(), VersionPanel:GetTall() ) -- Draw the rect
+		end
+	local DisplayPanel = vgui.Create( "DPanel", VersionPanel)
+		DisplayPanel:SetPos( 5, 5)
+		DisplayPanel:SetSize( DisplayPanel:GetParent():GetWide() - 10, 60 )
+		DisplayPanel._BGColor = Color(75,75,75,255)
+		DisplayPanel.Paint = function() -- The paint function		
+			draw.RoundedBox( 4, 0, 0, DisplayPanel:GetWide(), DisplayPanel:GetTall(), DisplayPanel._BGColor )
+		end
+	local myLabel= vgui.Create("DLabel", DisplayPanel)
+		myLabel:SetText(mes1)
+		myLabel:SetPos(10,10)
+		myLabel:SizeToContents()
+		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+	local setButton = vgui.Create("DButton", VersionPanel)
+		setButton:SetText("Check SVN Version")	
+		setButton:SetSize(100,30)
+		--setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
+		local x,y = DisplayPanel:GetPos()
+		setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
+		
+		setButton.DoClick = function()			
+			http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/","",function(contents,size)
+					serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
+					paintPane()
+			end)			
+		end			
+		function paintPane()
+			local ver = tonumber(userVer)
+			local mes2 = serverVer .. "\n"
+			if ver < serverVer then --When the user has an outdated version
+				DisplayPanel._BGColor = Color(185,75,75, 255)
+				myLabel:SetColor( Color(0,0,0,255) )
+				mes2 = mes2 .. "You don't have the most upto date version of the MW2 Killstreaks\nPlease go and update the SVN"
+				DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 10)
+			elseif ver == serverVer then --When the user is up to date
+				DisplayPanel._BGColor = Color(75,185,75, 255)
+				myLabel:SetColor( Color(0,0,0,255) )
+				mes2 = mes2 .. "You have the most current version of the MW2 Killstreaks"
+			else --When the user has a higher version then the server, which shouldn't happen
+			end
+			myLabel:SetText(mes1 .. mes2)
+			myLabel:SizeToContents()
+			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+			x,y = DisplayPanel:GetPos()
+			setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
+		end
+		if serverVer > 0 then
+			paintPane(serverVer)
+		end
+	return VersionPanel;
+end
+
+local function MW2KillstreakChooseFrame()
 	local select3 = 0;
 	local selectedNums = 0;
 	local canUseNuke = GetConVarNumber("mw2_Allow_Nuke") or 0
@@ -304,168 +472,6 @@ function MW2KillstreakChooseFrame()
 	if pan != nil then
 		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/world", false, false, "Check for Updates" )
 	end
-end
-
-function MW2TeamsTab(frame)
-	local ButtonPanel = vgui.Create( "DPanel" )
-	ButtonPanel:SetPos( 0, 0)
-	ButtonPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 31 )
-	ButtonPanel:SetPaintBackground(false)
-	
-	local buttonSize = 64
-	local buttonSpaceing = (ButtonPanel:GetTall() - (buttonSize * 5) ) /  5
-	local buttonX, buttonY = frame:GetWide()/2 - buttonSize/2, 10;
-	local numButtons = 0;
-	local MW2Voices = {"militia", "seals", "opfor", "rangers", "tf141"}
-	local t = LocalPlayer():Team() - 1;
-	--MsgN("Team = " .. tostring(t))
-	for k,v in ipairs(MW2Voices) do
-	
-		local myButton = vgui.Create("DImageButton", ButtonPanel)
-		myButton:SetMaterial( "models/deathdealer142/supply_crate/" .. MW2Voices[k] )
-		myButton:SetPos( buttonX, (buttonSize * numButtons) + (buttonSpaceing * numButtons) + buttonY );
-		myButton:SetSize(buttonSize, buttonSize)
-		myButton.DoClick = function()
-			t = k - 1;
-			datastream.StreamToServer( "SetMw2Voices", {k} )		
-		end
-		numButtons = numButtons + 1
-	end
-	ButtonPanel.Paint = function() -- Paint function
-		surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
-		surface.DrawRect( 0, 0, ButtonPanel:GetWide(), ButtonPanel:GetTall() ) -- Draw the rect	
-		
-		local y = (buttonSize * t) + (buttonSpaceing * t) + buttonY
-		surface.SetDrawColor( 150, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
-		surface.DrawOutlinedRect( buttonX, y, 64, 64 ) -- Draw the rect
-	end
-	return ButtonPanel;
-end
-
-function MW2UserVars(frame)
-	local OptionPanel = vgui.Create( "DPanel")
-	OptionPanel:SetPos( 0, 0)
-	OptionPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 31 )
-	OptionPanel:SetPaintBackground(false)
-	
-	local nuke = LocalPlayer():GetNetworkedBool("MW2NukeEffectOwner") or false;
-	
-	local nukeOwner = vgui.Create("DCheckBoxLabel", OptionPanel)
-	nukeOwner:SetText("Nuke effects owner")
-	if nuke then
-		nukeOwner:SetValue(true)
-	end
-	nukeOwner:SetPos( 10, 10)
-	
-	nukeOwner:SizeToContents()
-	nukeOwner.OnChange = function()
-		nuke = nukeOwner:GetChecked()
-	end	
-	
-	local nX, nY = nukeOwner:GetPos();
-	local sentryTracer = vgui.Create("DCheckBoxLabel", OptionPanel)
-	sentryTracer:SetText("Show laser on Sentry")
-	if LocalPlayer():GetVar("ShowSentryLaser", false) then
-		sentryTracer:SetValue(true)
-	end
-	sentryTracer:SetPos( nX, nY + 20);
-	sentryTracer:SizeToContents()
-	sentryTracer.OnChange = function()		
-		LocalPlayer():SetVar("ShowSentryLaser", sentryTracer:GetChecked() )
-	end	
-	
-	local setButton = vgui.Create("DButton", OptionPanel)
-	setButton:SetText("Set")	
-	setButton:SetSize(50,30)
-	setButton:SetPos( OptionPanel:GetWide()/2 - setButton:GetWide()/2, OptionPanel:GetTall() - setButton:GetTall() - 5 )
-	setButton.DoClick = function()
-		datastream.StreamToServer( "setMW2PlayerVars", {nuke} )
-		DermaFrame:Close();
-	end
-
-	OptionPanel.Paint = function() -- Paint function
-		surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
-		surface.DrawRect( 0, 0, OptionPanel:GetWide(), OptionPanel:GetTall() ) -- Draw the rect
-	end
-	
-	return OptionPanel;
-end
-local serverVer = -1;
-function UpdateFrame(frame)
-	local fi = "lua/autorun/server/killstreakCounter.lua";
-	local dir = nil;
-	local userVer = "";
-	local addons = file.FindDir("addons/*", true);
-	
-	for k,v in ipairs(addons) do
-		if file.Exists("addons/" .. v .. "/" .. fi, true) then 
-			dir = "addons/" .. v .. "/.svn/entries";
-			break;
-		end
-	end
-	
-	if dir != nil then
-		userVer =  string.Explode("\n", file.Read( dir, true) )[4]
-	else
-		return nil;
-	end
-	local mes1 = "You have version " .. userVer .. "\nThe current version is "
-	local VersionPanel = vgui.Create( "DPanel", frame)
-		VersionPanel:SetPos( 5, 30)
-		VersionPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 40 )
-		VersionPanel.Paint = function() -- Paint function
-			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
-			surface.DrawRect( 0, 0, VersionPanel:GetWide(), VersionPanel:GetTall() ) -- Draw the rect
-		end
-	local DisplayPanel = vgui.Create( "DPanel", VersionPanel)
-		DisplayPanel:SetPos( 5, 5)
-		DisplayPanel:SetSize( DisplayPanel:GetParent():GetWide() - 10, 60 )
-		DisplayPanel._BGColor = Color(75,75,75,255)
-		DisplayPanel.Paint = function() -- The paint function		
-			draw.RoundedBox( 4, 0, 0, DisplayPanel:GetWide(), DisplayPanel:GetTall(), DisplayPanel._BGColor )
-		end
-	local myLabel= vgui.Create("DLabel", DisplayPanel)
-		myLabel:SetText(mes1)
-		myLabel:SetPos(10,10)
-		myLabel:SizeToContents()
-		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
-	local setButton = vgui.Create("DButton", VersionPanel)
-		setButton:SetText("Check SVN Version")	
-		setButton:SetSize(100,30)
-		--setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
-		local x,y = DisplayPanel:GetPos()
-		setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
-		
-		setButton.DoClick = function()			
-			http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/","",function(contents,size)
-					serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
-					paintPane()
-			end)			
-		end			
-		function paintPane()
-			local ver = tonumber(userVer)
-			local mes2 = serverVer .. "\n"
-			if ver < serverVer then --When the user has an outdated version
-				DisplayPanel._BGColor = Color(185,75,75, 255)
-				myLabel:SetColor( Color(0,0,0,255) )
-				mes2 = mes2 .. "You don't have the most upto date version of the MW2 Killstreaks\nPlease go and update the SVN"
-				DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 10)
-			elseif ver == serverVer then --When the user is up to date
-				DisplayPanel._BGColor = Color(75,185,75, 255)
-				myLabel:SetColor( Color(0,0,0,255) )
-				mes2 = mes2 .. "You have the most current version of the MW2 Killstreaks"
-			else --When the user has a higher version then the server, which shouldn't happen
-			end
-			myLabel:SetText(mes1 .. mes2)
-			myLabel:SizeToContents()
-			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
-			x,y = DisplayPanel:GetPos()
-			setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
-		end
-		if serverVer > 0 then
-			paintPane(serverVer)
-		end
-	return VersionPanel;
 end
 
 concommand.Add("OpenKillstreakWindow", MW2KillstreakChooseFrame)

@@ -3,7 +3,7 @@ AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 IncludeClientFile("cl_init.lua")
 
-ENT.moveFactor = 1;
+ENT.moveFactor = .5;
 ENT.speedFactor = 1;
 ENT.speedBoost = true;
 ENT.keepPlaying = false;
@@ -13,13 +13,14 @@ ENT.Sky = 0;
 ENT.ang = nil;
 ENT.turnDelay = CurTime();
 ENT.playerSpeeds = {};
+ENT.MissileSpeed = 0;
 local missileThrustSound = Sound("killstreak_rewards/predator_missile_thruster.wav")
 local missileBoostSound = Sound("killstreak_rewards/predator_missile_boost.wav")
 local missileExplosionSound = Sound("killstreak_rewards/predator_missile_explosion.wav")
 local thrustSoundDuration = SoundDuration(missileThrustSound);
 
 function ENT:PhysicsUpdate()
-	self.PhysObj:SetVelocity((self.Entity:GetForward()* (self.Sky /6.5) ) * self.speedFactor)
+	self.PhysObj:SetVelocity((self.Entity:GetForward()* self.MissileSpeed ) * self.speedFactor)
 	
 	self.ang = self:GetAngles()
 	
@@ -95,6 +96,7 @@ function ENT:Initialize()
 	umsg.Start("Predator_missile_SetUpHUD", self.Owner);
 	umsg.End()
 	self.keepPlaying = true;
+	self.MissileSpeed = math.Clamp(Vector(0,0, self.Sky):Distance( Vector( 0,0, self:findGround()) ), 0, 2000)
 end
 
 function ENT:PhysicsCollide( data, physobj )
@@ -169,58 +171,10 @@ function ENT:SpawnTrail()
 	
 end
 
-function getTeam()
-	return self.Owner:Team()
-end
-
 function ENT:StartThrustSound()	
 	self.Entity:EmitSound(missileThrustSound)
 end
 
 function ENT:StopThrustSound()		
 	self.keepPlaying = false;
-end
-
-function ENT:FindSky()
-
-	local maxheight = 16384
-	local startPos = Vector(0,0,0);
-	local endPos = Vector(0, 0,maxheight);
-	local filterList = {}
-
-	local trace = {}
-	trace.start = startPos;
-	trace.endpos = endPos;
-	trace.filter = filterList;
-
-	local traceData;
-	local hitSky;
-	local hitWorld;
-	local bool = true;
-	local maxNumber = 0;
-	local skyLocation = -1;
-	while bool do
-		traceData = util.TraceLine(trace);
-		hitSky = traceData.HitSky;
-		hitWorld = traceData.HitWorld;
-		if hitSky then
-			//MsgN("Hit the sky")
-			skyLocation = traceData.HitPos.z;
-			bool = false;
-		elseif hitWorld then
-			trace.start = traceData.HitPos + Vector(0,0,50);
-			//MsgN("hit the world, not the sky")
-		else 
-			//Msg("Hit ")
-			//MsgN(traceData.Entity:GetClass());
-			table.insert(filterList, traceData.Entity)
-		end
-			
-		if maxNumber >= 300 then
-			MsgN("Reached max number here, no luck in finding a skyBox");
-			bool = false;
-		end
-	end
-	
-	return skyLocation;
 end
