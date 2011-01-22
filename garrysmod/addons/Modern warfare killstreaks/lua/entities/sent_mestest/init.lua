@@ -16,7 +16,6 @@ end
 
 function ENT:Initialize()	
 	self.Owner = self:GetVar("owner")	
-	MsgN(self.Owner)
 	self:SetModel( self.Model );
 	
 	self:PhysicsInit( SOLID_VPHYSICS )
@@ -27,6 +26,6 @@ function ENT:Initialize()
 	if (self.PhysObj:IsValid()) then
 		self.PhysObj:Wake()
 	end
-	self:OpenOverlayMap()	
+	self:OpenOverlayMap(true)	
 end
 
