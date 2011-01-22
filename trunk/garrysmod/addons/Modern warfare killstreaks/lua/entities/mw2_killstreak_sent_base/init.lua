@@ -97,3 +97,18 @@ function ENT:findGround()
 	return groundLocation;
 end
 
+function ENT:SetDropLocation(vec)
+	self.TestDropLoc = vec;
+	MsgN("Loc = " .. tostring(self.TestDropLoc))
+end
+
+function ENT:OpenOverlayMap()
+	umsg.Start("MW2_DropLoc_Overlay_UM", self.Owner);
+		umsg.Entity(self);
+	umsg.End();
+end
+
+local function SetLocation( pl, handler, id, encoded, decoded ) -- this data stream allows the client to reset the killstreak, so if you recive two of the same killstreak right after the other it will playthe notification for both
+	decoded[1]:SetDropLocation( decoded[2] )
+end
+datastream.Hook( "MW2_DropLocation_Overlay_Stream", SetLocation )
