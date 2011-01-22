@@ -224,7 +224,7 @@ local function getClientVersion()
 end
 
 local serverVer = -1;
---local userVer = getClientVersion();
+local userVer = getClientVersion();
 
 local function UpdateFrame(frame)
 	if userVer == nil then return end
@@ -500,7 +500,7 @@ local function MW2KillstreakChooseFrame()
 	end
 	PropertySheet:AddSheet( "Team Menu", MW2TeamsTab(DermaPanel), "gui/silkicons/group", false, false, "Select your Team here" )
 	PropertySheet:AddSheet( "User Vars", MW2UserVars(DermaPanel), "gui/silkicons/wrench", false, false, "Set Your options" )
----	local pan = UpdateFrame(DermaPanel);
+	local pan = UpdateFrame(DermaPanel);
 	if pan != nil then
 		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/world", false, false, "Check for Updates" )
 	end
