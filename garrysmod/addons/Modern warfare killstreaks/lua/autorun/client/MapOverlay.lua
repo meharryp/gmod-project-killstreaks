@@ -53,6 +53,12 @@ local xyOffset = .05
 local x,y = ScrW() * xyOffset, ScrH() * xyOffset
 local w,h = math.Round( ScrW() - (x * 2 ) ), math.Round( ScrH() - ( y * 2 ) )
 
+function math.AdvRound( val, d )
+	d = d or 0;
+ 
+	return math.Round( val * (10 ^ d) ) / (10 ^ d);
+end
+
 local function drawDirArrow(angle, xPos, yPos)	
 	surface.SetTexture(arrow)
 	surface.SetDrawColor(255,255,255,255)
@@ -106,6 +112,8 @@ local function showOverlay(ent, select)
 			end
 		end	
 		button.curX, button.curY = 0,0
+		button.fov = 75;
+		button.fovScale = 1;
 	local moveFactor = .005	
 	local texPossitonX = button:GetWide()/2 - texSize/2
 	local texPossitonY = button:GetTall()/2 - texSize/2
@@ -120,7 +128,9 @@ local function showOverlay(ent, select)
 		CamData.w = w
 		CamData.h = h
 		CamData.drawviewmodel = false;
+		CamData.fov = button.fov
 		render.RenderView( CamData )			
+		
 		surface.SetTexture(tex)
 		surface.SetDrawColor(255,255,255,255) //Makes sure the image draws correctly
 		surface.DrawTexturedRect(texPossitonX, texPossitonY, texSize, texSize)	
@@ -128,16 +138,26 @@ local function showOverlay(ent, select)
 			drawDirArrow(ang, button:GetWide()/2, button:GetTall()/2)
 		end
 	end
-
+	
 	button.Think = function()
 		if !button.Move then return end
 		button.curX, button.curY = button:CursorPos();
 		button.curX = button.curX - button:GetWide()/2;
 		button.curY = button.curY - button:GetTall()/2;
-		button.curX = math.Round( button.curX / (button:GetWide() * moveFactor) ); 
-		button.curY = math.Round( button.curY / (button:GetTall() * moveFactor) );		
+		button.curX = math.AdvRound( ( button.curX / (button:GetWide() * moveFactor) ) * button.fovScale, 2 );
+		button.curY = math.AdvRound( ( button.curY / (button:GetTall() * moveFactor) ) * button.fovScale, 2 );
 		if button.curX != 0 then viewPos = viewPos - Vector(0, button.curX, 0) end
 		if button.curY != 0 then viewPos = viewPos - Vector(button.curY, 0, 0) end
+	end
+	function button:OnMouseWheeled(mc)
+		if mc > 0 then
+			button.fov = button.fov - 4
+			if button.fov < 1 then button.fov = 1; end			
+		elseif mc < 0 then
+			button.fov = button.fov + 4;
+			if button.fov > 75 then button.fov = 75; end
+		end
+		button.fovScale = button.fov/75
 	end
 
 	button.OnCursorEntered = function()
