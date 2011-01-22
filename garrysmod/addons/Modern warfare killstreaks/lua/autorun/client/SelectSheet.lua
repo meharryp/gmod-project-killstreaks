@@ -224,7 +224,7 @@ local function getClientVersion()
 end
 
 local serverVer = -1;
-local userVer = getClientVersion();
+--local userVer = getClientVersion();
 
 local function UpdateFrame(frame)
 	if userVer == nil then return end
@@ -285,6 +285,34 @@ local function UpdateFrame(frame)
 			paintPane(serverVer)
 		end
 	return VersionPanel;
+end
+
+local function DevFrame(frame)
+	local lpl = LocalPlayer():Nick();
+	if lpl != "Death dealer142" && lpl != "TheMike" && lpl != "eXecuter^" && lpl != "Saber-Six" then return nil end
+	local DevPanel = vgui.Create( "DPanelList", frame)
+		DevPanel:SetPos( 5, 30)
+		DevPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 40 )
+		DevPanel:SetSpacing( 5 )
+		DevPanel:EnableHorizontal( true )
+		
+		DevPanel.Paint = function() -- Paint function
+			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
+			surface.DrawRect( 0, 0, DevPanel:GetWide(), DevPanel:GetTall() ) -- Draw the rect
+		end
+		
+		local myButton = vgui.Create("DButton")
+		myButton:SetText("Overview map")
+		myButton:SetPos(10, 10);
+		myButton:SizeToContents()
+		myButton:SetSize( myButton:GetWide() + 20, myButton:GetTall() + 20 )
+		myButton.DoClick = function()
+			RunConsoleCommand( "gm_spawnsent", "sent_mestest" )
+		end
+		
+		
+		DevPanel:AddItem(myButton)
+	return DevPanel;
 end
 
 local function MW2KillstreakChooseFrame()
@@ -466,12 +494,17 @@ local function MW2KillstreakChooseFrame()
 	end
 	
 	PropertySheet:AddSheet( "Killstreak Menu", DermaPanel, "gui/silkicons/user", false, false, "Select your Killstreaks here" )	
+	local dev = DevFrame(DermaPanel)
+	if dev != nil then
+		PropertySheet:AddSheet( "Developer panel", dev, "gui/silkicons/user", false, false, "Tab For Devs" )
+	end
 	PropertySheet:AddSheet( "Team Menu", MW2TeamsTab(DermaPanel), "gui/silkicons/group", false, false, "Select your Team here" )
 	PropertySheet:AddSheet( "User Vars", MW2UserVars(DermaPanel), "gui/silkicons/wrench", false, false, "Set Your options" )
-	local pan = UpdateFrame(DermaPanel);
+---	local pan = UpdateFrame(DermaPanel);
 	if pan != nil then
 		PropertySheet:AddSheet( "Killstreak version", pan, "gui/silkicons/world", false, false, "Check for Updates" )
 	end
+	
 end
 
 concommand.Add("OpenKillstreakWindow", MW2KillstreakChooseFrame)
