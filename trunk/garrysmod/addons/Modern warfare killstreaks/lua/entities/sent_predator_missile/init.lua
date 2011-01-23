@@ -3,6 +3,7 @@ AddCSLuaFile( "shared.lua" )
 include( 'shared.lua' )
 IncludeClientFile("cl_init.lua")
 
+ENT.Model = "models/military2/bomb/bomb_cbu.mdl";
 ENT.moveFactor = .5;
 ENT.speedFactor = 1;
 ENT.speedBoost = true;
@@ -14,6 +15,7 @@ ENT.ang = nil;
 ENT.turnDelay = CurTime();
 ENT.playerSpeeds = {};
 ENT.MissileSpeed = 0;
+ENT.restrictMovement = true;
 local missileThrustSound = Sound("killstreak_rewards/predator_missile_thruster.wav")
 local missileBoostSound = Sound("killstreak_rewards/predator_missile_boost.wav")
 local missileExplosionSound = Sound("killstreak_rewards/predator_missile_explosion.wav")
@@ -63,33 +65,19 @@ function ENT:Think()
 	end
  end
 
-function ENT:Initialize()	
-	self.Sky = self:FindSky()
-	if self.Sky == -1 then return end
+function ENT:Initialize2()	
 	self.Sky = self.Sky - 100;
 
-	self.Owner = self.Entity:GetVar("owner",Entity(1))	
-	self.Wep = self:GetVar("Weapon")
 	local lplPos = self.Owner:GetPos()
 	local skyVector = Vector(lplPos.x,lplPos.y, self.Sky);
-	self.speedFactor = 1;
-	self.speedBoost = true;
-	self.Entity:SetModel( "models/military2/bomb/bomb_cbu.mdl" ); --// "models/military2/missile/missile_sm2.mdl" );
-	
-	self.Entity:PhysicsInit( SOLID_VPHYSICS )
-	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )	
-	self.Entity:SetSolid( SOLID_VPHYSICS )
+	--self.speedFactor = 1;
+	--self.speedBoost = true;
 
 	self.Entity:SetPos(skyVector)
 	self.Entity:SetAngles(Angle(75, self.Owner:EyeAngles().y, 0))
 	
-	
-	self.PhysObj = self.Entity:GetPhysicsObject()
-	if (self.PhysObj:IsValid()) then
-		self.PhysObj:Wake()
-	end	
-	self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
-	GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
+	--self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
+	--GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
 	self.playerAng = self.Owner:GetAngles();
 		
 	self.Owner:SetViewEntity(self);

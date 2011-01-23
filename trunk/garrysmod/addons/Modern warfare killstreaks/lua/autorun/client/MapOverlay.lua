@@ -47,11 +47,104 @@ local function FindSky()
 	return skyLocation;
 end
 
+function findBounds(axis, height)
+
+	local length = 16384
+	local startPos = Vector(0,0,height);
+	local endPos;
+	if axis == "x" then 
+		endPos = Vector(length, 0,height);
+	elseif axis == "y" then 
+		endPos = Vector(0, length,height);
+	end
+	
+	local filterList = {}
+
+	local trace = {}
+	trace.start = startPos;
+	trace.endpos = endPos;
+	trace.filter = filterList;
+
+	local traceData;
+	local hitSky;
+	local hitWorld;
+	local bool = true;
+	local maxNumber = 0;
+	local wallLocation1 = -1;
+	local wallLocation2 = -1;
+	while bool do
+		traceData = util.TraceLine(trace);
+		hitSky = traceData.HitSky;
+		hitWorld = traceData.HitWorld;
+		if hitSky then
+			if wallLocation1 == -1 then
+				if axis == "x" then
+					wallLocation1 = traceData.HitPos.x;
+				elseif axis == "y" then
+					wallLocation1 = traceData.HitPos.y;
+				end
+				
+				if axis == "x" then 
+					endPos = Vector(length * -1, 0,height);
+				elseif axis == "y" then 
+					endPos = Vector(0, length * -1,height);
+				end
+				
+				trace = {}
+				trace.start = startPos;
+				trace.endpos = endPos;
+				trace.filter = filterList;
+			else
+				if axis == "x" then
+					wallLocation2 = traceData.HitPos.x;
+				elseif axis == "y" then
+					wallLocation2 = traceData.HitPos.y;
+				end
+				
+				bool = false;
+			end
+		elseif hitWorld then
+			if wallLocation1 == -1 then
+				if axis == "x" then
+					trace.start = traceData.HitPos + Vector(50,0,0);
+				elseif axis == "y" then
+					trace.start = traceData.HitPos + Vector(0,50,0);
+				end
+			else
+				if axis == "x" then
+					trace.start = traceData.HitPos - Vector(50,0,0);
+				elseif axis == "y" then
+					trace.start = traceData.HitPos - Vector(0,50,0);
+				end
+			end
+		else 
+			table.insert(filterList, traceData.Entity)
+		end
+			
+		if maxNumber >= 100 then
+			MsgN("Reached max number here, no luck in finding the wall");
+			bool = false;
+		end		
+		maxNumber = maxNumber + 1;
+	end
+	
+	return wallLocation1, wallLocation2;
+end
 local sky = FindSky()
+local x1,x2 = findBounds("x", sky) -- x1 is positive, x2 is negative
+local y1,y2 = findBounds("y", sky) -- y1 > 0; y2 < 0
 
 local xyOffset = .05
 local x,y = ScrW() * xyOffset, ScrH() * xyOffset
 local w,h = math.Round( ScrW() - (x * 2 ) ), math.Round( ScrH() - ( y * 2 ) )
+
+local function isInWorld( pos )
+	local posX, posY = pos.x, pos.y
+	if ( posX > x2 && posX < x1 ) && ( posY > y2 && posY < y1 ) then
+		return true;
+	end
+	return false;
+end
 
 function math.AdvRound( val, d )
 	d = d or 0;
@@ -91,6 +184,7 @@ local function showOverlay(ent, select)
 		Overlay:SetDraggable(false)
 		Overlay:ShowCloseButton(false)
 		Overlay:SetTitle('')
+		Overlay:SetBackgroundBlur( true )
 		Overlay:MakePopup()
 				
 	local button = vgui.Create("DButton", Overlay) -- Need to use a button to register right clicks.
@@ -146,15 +240,23 @@ local function showOverlay(ent, select)
 		button.curY = button.curY - button:GetTall()/2;
 		button.curX = math.AdvRound( ( button.curX / (button:GetWide() * moveFactor) ) * button.fovScale, 2 );
 		button.curY = math.AdvRound( ( button.curY / (button:GetTall() * moveFactor) ) * button.fovScale, 2 );
-		if button.curX != 0 then viewPos = viewPos - Vector(0, button.curX, 0) end
-		if button.curY != 0 then viewPos = viewPos - Vector(button.curY, 0, 0) end
+		if button.curX != 0 && isInWorld( viewPos - Vector(0, button.curX, 0) ) then viewPos = viewPos - Vector(0, button.curX, 0) end
+		if button.curY != 0 && isInWorld( viewPos - Vector(button.curY, 0, 0) ) then viewPos = viewPos - Vector(button.curY, 0, 0) end
 	end
 	function button:OnMouseWheeled(mc)
-		if mc > 0 then
-			button.fov = button.fov - 4
+		if mc > 0 then			
+			if button.fov < 10 then 
+				button.fov = button.fov - 1;
+			else
+				button.fov = button.fov - 4
+			end
 			if button.fov < 1 then button.fov = 1; end			
 		elseif mc < 0 then
-			button.fov = button.fov + 4;
+			if button.fov < 10 then 
+				button.fov = button.fov + 1;
+			else
+				button.fov = button.fov + 4;
+			end
 			if button.fov > 75 then button.fov = 75; end
 		end
 		button.fovScale = button.fov/75
