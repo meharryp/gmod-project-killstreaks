@@ -13,8 +13,8 @@ ENT.WallLoc = NULL;
 ENT.restrictMovement = true;
 
 function ENT:Think()
-	
-	if self.DropLoc == nil || self.DropAng == nil then return end
+	self:NextThink( CurTime() + 0.1 )
+	if self.DropLoc == nil || self.DropAng == nil then return true end
 	
 	if self.findHoverZone then
 		self.DropLoc = self.DropLoc - Vector(0,0, 100);
@@ -63,11 +63,11 @@ function ENT:Think()
 		self:Remove()
 	end	
 	
-	self:NextThink( CurTime() + 0.1 )
+	
     return true;	
 end
 
-function ENT:Initialize2()
+function ENT:MW2_Init()
 	self:SetColor(255,255,255,0)
 	self.PhysObj:EnableGravity(false)
 	self:SetNotSolid(true)
