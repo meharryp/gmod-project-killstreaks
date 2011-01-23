@@ -294,7 +294,7 @@ local function DevFrame(frame)
 		DevPanel:SetPos( 5, 30)
 		DevPanel:SetSize( frame:GetWide() - 10, frame:GetTall() - 40 )
 		DevPanel:SetSpacing( 5 )
-		DevPanel:EnableHorizontal( true )
+		DevPanel:EnableHorizontal( false )
 		
 		DevPanel.Paint = function() -- Paint function
 			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
@@ -322,6 +322,16 @@ local function DevFrame(frame)
 		end				
 		DevPanel:AddItem(airButton)
 		
+		local stealthButton = vgui.Create("DButton")
+		stealthButton:SetText("Stealth bomber")
+		stealthButton:SetPos(10, 10);
+		stealthButton:SizeToContents()
+		stealthButton:SetSize( stealthButton:GetWide() + 20, stealthButton:GetTall() + 20 )
+		stealthButton.DoClick = function()
+			RunConsoleCommand( "gm_giveswep", "stealth_bomber_test" )
+			DermaFrame:Close();
+		end				
+		DevPanel:AddItem(stealthButton)
 		
 	return DevPanel;
 end

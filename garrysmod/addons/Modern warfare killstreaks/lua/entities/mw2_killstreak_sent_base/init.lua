@@ -56,7 +56,8 @@ end
 function ENT:findGround()
 
 	local minheight = -16384
-	local startPos = self.Owner:GetPos()
+	--local startPos = self.Owner:GetPos()
+	local startPos = Vector( 0,0, 0) 
 	local endPos = Vector(startPos.x, startPos.y,minheight);
 	local filterList = {self.Owner, self}
 
@@ -195,14 +196,17 @@ function ENT:Initialize()
 		GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
 	end
 	
-	self:Initialize2();
+	self:MW2_Init();
 end
 
-function ENT:Initialize2()	
+function ENT:MW2_Init()	
 end
 
 function ENT:GetTeam()
 	return self.Owner:Team()
+end
+
+function ENT:Destroy()
 end
 
 function ENT:SetDropLocation(vec, ang)

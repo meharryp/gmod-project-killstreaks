@@ -65,7 +65,7 @@ function ENT:Think()
 	end
  end
 
-function ENT:Initialize2()	
+function ENT:MW2_Init()	
 	self.Sky = self.Sky - 100;
 
 	local lplPos = self.Owner:GetPos()
