@@ -1,20 +1,14 @@
 AddCSLuaFile( "cl_init.lua" )
 IncludeClientFile("cl_init.lua")
 include( 'shared.lua' )
---[[
-function ENT:PhysicsUpdate()
-end
 
-function ENT:Think()
-end
-
-function ENT:Initialize()
-end
-]]
-function ENT:GetTeam()
-	return self.Owner:Team()
-end
-
+ENT.MapBounds = { };
+ENT.Model = "";
+ENT.Sky = 0;
+ENT.playerSpeeds = {}
+ENT.restrictMovement = false;
+ENT.DropLoc = nil;
+ENT.DropAng = nil;
 function ENT:FindSky()
 
 	local maxheight = 16384
@@ -97,10 +91,123 @@ function ENT:findGround()
 	return groundLocation;
 end
 
+function ENT:FindBounds(xAxis)
+	local height = self.Sky;
+	local length = 16384
+	local startPos = Vector(0,0,height);
+	local endPos;
+	if xAxis then 
+		endPos = Vector(length, 0,height);
+	elseif !xAxis then 
+		endPos = Vector(0, length,height);
+	end
+	
+	local filterList = {}
+
+	local trace = {}
+	trace.start = startPos;
+	trace.endpos = endPos;
+	trace.filter = filterList;
+
+	local traceData;
+	local hitSky;
+	local hitWorld;
+	local bool = true;
+	local maxNumber = 0;
+	local wallLocation1 = -1;
+	local wallLocation2 = -1;
+	while bool do
+		traceData = util.TraceLine(trace);
+		hitSky = traceData.HitSky;
+		hitWorld = traceData.HitWorld;
+		if hitSky then
+			if wallLocation1 == -1 then
+				if xAxis then
+					wallLocation1 = traceData.HitPos.x;
+				elseif !xAxis then
+					wallLocation1 = traceData.HitPos.y;
+				end
+				
+				if xAxis then 
+					endPos = Vector(length * -1, 0,height);
+				elseif !xAxis then 
+					endPos = Vector(0, length * -1,height);
+				end
+				
+				trace = {}
+				trace.start = startPos;
+				trace.endpos = endPos;
+				trace.filter = filterList;
+			else
+				if xAxis then
+					wallLocation2 = traceData.HitPos.x;
+				elseif !xAxis then
+					wallLocation2 = traceData.HitPos.y;
+				end
+				
+				bool = false;
+			end
+		elseif hitWorld then
+			if wallLocation1 == -1 then
+				if xAxis then
+					trace.start = traceData.HitPos + Vector(50,0,0);
+				elseif !xAxis then
+					trace.start = traceData.HitPos + Vector(0,50,0);
+				end
+			else
+				if xAxis then
+					trace.start = traceData.HitPos - Vector(50,0,0);
+				elseif !xAxis then
+					trace.start = traceData.HitPos - Vector(0,50,0);
+				end
+			end
+		else 
+			table.insert(filterList, traceData.Entity)
+		end
+			
+		if maxNumber >= 100 then
+			MsgN("Reached max number here, no luck in finding the wall");
+			bool = false;
+		end		
+		maxNumber = maxNumber + 1;
+	end
+	
+	return wallLocation1, wallLocation2;
+end
+
+function ENT:Initialize()	
+	self.Owner = self:GetVar("owner", nil)	
+	self.Wep = self:GetVar("Weapon")
+	self.Sky = self:FindSky()
+	self:SetModel( self.Model );
+	
+	self:PhysicsInit( SOLID_VPHYSICS )
+	self:SetMoveType( MOVETYPE_VPHYSICS )	
+	self:SetSolid( SOLID_VPHYSICS )
+	
+	self.PhysObj = self:GetPhysicsObject()
+	if (self.PhysObj:IsValid()) then
+		self.PhysObj:Wake()
+	end	
+	
+	if self.restrictMovement then
+		self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
+		GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
+	end
+	
+	self:Initialize2();
+end
+
+function ENT:Initialize2()	
+end
+
+function ENT:GetTeam()
+	return self.Owner:Team()
+end
+
 function ENT:SetDropLocation(vec, ang)
-	self.TestDropLoc = vec;
-	MsgN( "Ang = " .. ang)
-	MsgN("Loc = " .. tostring(self.TestDropLoc))
+	self.DropLoc = vec;
+	self.DropAng = Angle( 0, ang ,0 );
 end
 
 function ENT:OpenOverlayMap(select)

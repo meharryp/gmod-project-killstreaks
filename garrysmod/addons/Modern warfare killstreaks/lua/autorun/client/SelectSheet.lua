@@ -301,17 +301,28 @@ local function DevFrame(frame)
 			surface.DrawRect( 0, 0, DevPanel:GetWide(), DevPanel:GetTall() ) -- Draw the rect
 		end
 		
-		local myButton = vgui.Create("DButton")
-		myButton:SetText("Overview map")
-		myButton:SetPos(10, 10);
-		myButton:SizeToContents()
-		myButton:SetSize( myButton:GetWide() + 20, myButton:GetTall() + 20 )
-		myButton.DoClick = function()
+		local overButton = vgui.Create("DButton")
+		overButton:SetText("Overview map")
+		overButton:SetPos(10, 10);
+		overButton:SizeToContents()
+		overButton:SetSize( overButton:GetWide() + 20, overButton:GetTall() + 20 )
+		overButton.DoClick = function()
 			RunConsoleCommand( "gm_spawnsent", "sent_mestest" )
-		end
+		end				
+		DevPanel:AddItem(overButton)
+		
+		local airButton = vgui.Create("DButton")
+		airButton:SetText("Air strike")
+		airButton:SetPos(10, 10);
+		airButton:SizeToContents()
+		airButton:SetSize( airButton:GetWide() + 20, airButton:GetTall() + 20 )
+		airButton.DoClick = function()
+			RunConsoleCommand( "gm_giveswep", "precision_airstrike_test" )
+			DermaFrame:Close();
+		end				
+		DevPanel:AddItem(airButton)
 		
 		
-		DevPanel:AddItem(myButton)
 	return DevPanel;
 end
 
