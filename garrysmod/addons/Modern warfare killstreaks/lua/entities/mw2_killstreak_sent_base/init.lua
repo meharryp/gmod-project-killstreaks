@@ -56,8 +56,7 @@ end
 function ENT:findGround()
 
 	local minheight = -16384
-	--local startPos = self.Owner:GetPos()
-	local startPos = Vector( 0,0, 0) 
+	local startPos = Vector( 0,0, self.Sky) 
 	local endPos = Vector(startPos.x, startPos.y,minheight);
 	local filterList = {self.Owner, self}
 
@@ -178,7 +177,7 @@ end
 
 function ENT:Initialize()	
 	self.Owner = self:GetVar("owner", nil)	
-	self.Wep = self:GetVar("Weapon")
+	self.Wep = self:GetVar("Weapon", nil)
 	self.Sky = self:FindSky()
 	self:SetModel( self.Model );
 	
