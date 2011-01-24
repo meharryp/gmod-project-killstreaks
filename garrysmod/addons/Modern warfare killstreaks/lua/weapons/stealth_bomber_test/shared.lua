@@ -4,7 +4,7 @@ if ( CLIENT ) then
 end
 SWEP.UseLaptop = true;
 SWEP.Base 				= "mw2_killstreak_wep_base"
-SWEP.AdminSpawnable		= true
+SWEP.AdminSpawnable		= false
 SWEP.Ent = "sent_stealth_bomber_test"
 SWEP.DelaySound = true;
 
