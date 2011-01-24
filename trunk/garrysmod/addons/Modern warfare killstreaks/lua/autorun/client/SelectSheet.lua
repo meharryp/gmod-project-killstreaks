@@ -333,6 +333,27 @@ local function DevFrame(frame)
 		end				
 		DevPanel:AddItem(stealthButton)
 		
+		local harrierButton = vgui.Create("DButton")
+		harrierButton:SetText("Harrier")
+		harrierButton:SetPos(10, 10);
+		harrierButton:SizeToContents()
+		harrierButton:SetSize( harrierButton:GetWide() + 20, harrierButton:GetTall() + 20 )
+		harrierButton.DoClick = function()
+			RunConsoleCommand( "gm_giveswep", "harrier_test" )
+			DermaFrame:Close();
+		end				
+		DevPanel:AddItem(harrierButton)
+		
+		local secButton = vgui.Create("DButton")
+		secButton:SetText("Sector Test")
+		secButton:SetPos(10, 10);
+		secButton:SizeToContents()
+		secButton:SetSize( secButton:GetWide() + 20, secButton:GetTall() + 20 )
+		secButton.DoClick = function()
+			RunConsoleCommand( "gm_spawnsent", "sent_sectortest" )
+		end				
+		DevPanel:AddItem(secButton)
+		
 	return DevPanel;
 end
 

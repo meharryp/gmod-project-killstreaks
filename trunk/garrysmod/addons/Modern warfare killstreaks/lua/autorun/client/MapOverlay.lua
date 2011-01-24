@@ -47,7 +47,7 @@ local function FindSky()
 	return skyLocation;
 end
 
-function findBounds(axis, height)
+local function findBounds(axis, height)
 
 	local length = 16384
 	local startPos = Vector(0,0,height);
