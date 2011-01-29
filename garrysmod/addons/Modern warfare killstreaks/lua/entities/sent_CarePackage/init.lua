@@ -31,7 +31,8 @@ function ENT:PhysicsUpdate()
 
 	if( !self.Entity:IsInWorld() && self.WasInWorld && self.RemoveDelay < CurTime()) then
 		//self:StopSound(roaterSound)
-		self.Owner:ConCommand("stopsound");
+		self.EMPSoundEmmiter:Stop()
+		--self.Owner:ConCommand("stopsound");
 		self.Entity:Remove();
 		self.Top:Remove();
 		self.Back:Remove();		
@@ -109,7 +110,10 @@ function ENT:Initialize()
 	constraint.Axis( self, self.Top, 0, 0, (Vector(0,0,0)), Vector(0,0,0) , 0, 0, 0, 1 )	
 	constraint.Axis( self, self.Back, 0, 0, Vector(-185,-3,13) , Vector(0,0,0), 0, 0, 0, 1 ) 
 	constraint.Keepupright( self.Top, Angle(0,0,0), 0, 15 )	
-	self:EmitSound(roaterSound, 500, 100);
+	--self:EmitSound(roaterSound, 500, 100);
+	self.EMPSoundEmmiter = CreateSound(self, roaterSound )
+	--self.EMPSoundEmmiter:SetSoundLevel(0)
+	self.EMPSoundEmmiter:Play() -- starts the sound	
 end
 
 function ENT:OnTakeDamage( dmginfo )

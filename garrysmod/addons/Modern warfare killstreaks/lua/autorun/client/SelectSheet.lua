@@ -204,6 +204,27 @@ local function MW2UserVars(frame)
 	return OptionPanel;
 end
 
+local function updatedPopup()
+
+	local updatedPopup = vgui.Create('DFrame')
+		updatedPopup:SetSize(294, 178)
+		updatedPopup:SetPos(ScrW()/2 - updatedPopup:GetWide()/2, ScrH()/4 - updatedPopup:GetTall()/2 )
+		updatedPopup:SetTitle('Untitled DFrame')
+		updatedPopup:SetSizable(true)
+		updatedPopup:SetDeleteOnClose(false)
+		updatedPopup:MakePopup()
+
+	local pane = vgui.Create('DPanel', updatedPopup)
+		pane:SetSize(276, 140)
+		pane:SetPos(10, 30)
+
+	local Message = vgui.Create('DLabel', pane)
+		Message:SetPos(5, 5)
+		Message:SetText('The MW2 Killstreaks have been updated.\nYou should go and update your SVN to get the latest version')
+		Message:SizeToContents()
+		Message:SetTextColor(Color(0, 0, 0, 255))
+end
+
 local function getClientVersion()
 	local fi = "lua/autorun/server/killstreakCounter.lua";
 	local dir = nil;	
@@ -217,14 +238,50 @@ local function getClientVersion()
 	end
 	
 	if dir != nil && file.Exists(dir,true) then
+	
 		return tonumber(string.Explode("\n", file.Read( dir, true) )[4] )
 	else
 		return nil;
 	end
 end
 
-local serverVer = -1;
-local userVer = getClientVersion();
+local serverVer;
+local userVer;
+local myLabel;
+local DisplayPanel;
+
+local function updateContent()
+	local ver = tonumber(userVer)
+		local mes2 = serverVer .. "\n"
+		if ver < serverVer then --When the user has an outdated version
+			DisplayPanel._BGColor = Color(185,75,75, 255)
+			myLabel:SetColor( Color(0,0,0,255) )
+			mes2 = mes2 .. "You don't have the most upto date version of the MW2 Killstreaks\nPlease go and update the SVN"
+			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 10)
+		elseif ver == serverVer then --When the user is up to date
+			DisplayPanel._BGColor = Color(75,185,75, 255)
+			myLabel:SetColor( Color(0,0,0,255) )
+			mes2 = mes2 .. "You have the most current version of the MW2 Killstreaks"
+		else --When the user has a higher version then the server, which shouldn't happen
+		end
+		myLabel:SetText(myLabel:GetText() .. mes2)
+		myLabel:SizeToContents()
+		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
+end
+
+local function serverCallBack(contents,size)
+	serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
+	updateContent()
+	if serverVer && userVer && serverVer > userVer then
+		updatedPopup();
+	end
+end
+
+local function getServerVersion()
+	http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/", "", serverCallBack)
+end
+getServerVersion()
+userVer = getClientVersion();
 
 local function UpdateFrame(frame)
 	if userVer == nil then return end
@@ -236,54 +293,19 @@ local function UpdateFrame(frame)
 			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
 			surface.DrawRect( 0, 0, VersionPanel:GetWide(), VersionPanel:GetTall() ) -- Draw the rect
 		end
-	local DisplayPanel = vgui.Create( "DPanel", VersionPanel)
+	DisplayPanel = vgui.Create( "DPanel", VersionPanel)
 		DisplayPanel:SetPos( 5, 5)
 		DisplayPanel:SetSize( DisplayPanel:GetParent():GetWide() - 10, 60 )
 		DisplayPanel._BGColor = Color(75,75,75,255)
 		DisplayPanel.Paint = function() -- The paint function		
 			draw.RoundedBox( 4, 0, 0, DisplayPanel:GetWide(), DisplayPanel:GetTall(), DisplayPanel._BGColor )
 		end
-	local myLabel= vgui.Create("DLabel", DisplayPanel)
+	myLabel= vgui.Create("DLabel", DisplayPanel)
 		myLabel:SetText(mes1)
 		myLabel:SetPos(10,10)
 		myLabel:SizeToContents()
 		DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
-	local setButton = vgui.Create("DButton", VersionPanel)
-		setButton:SetText("Check SVN Version")	
-		setButton:SetSize(100,30)
-		--setButton:SetPos( setButton:GetParent():GetWide()/2 - setButton:GetWide()/2, setButton:GetParent():GetTall() - setButton:GetTall() - 5 )
-		local x,y = DisplayPanel:GetPos()
-		setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
-		
-		setButton.DoClick = function()			
-			http.Get("http://gmod-project-killstreaks.googlecode.com/svn/trunk/","",function(contents,size)
-					serverVer = tonumber(string.match( contents, "Revision ([0-9]+)" ))
-					paintPane()
-			end)			
-		end			
-		function paintPane()
-			local ver = tonumber(userVer)
-			local mes2 = serverVer .. "\n"
-			if ver < serverVer then --When the user has an outdated version
-				DisplayPanel._BGColor = Color(185,75,75, 255)
-				myLabel:SetColor( Color(0,0,0,255) )
-				mes2 = mes2 .. "You don't have the most upto date version of the MW2 Killstreaks\nPlease go and update the SVN"
-				DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 10)
-			elseif ver == serverVer then --When the user is up to date
-				DisplayPanel._BGColor = Color(75,185,75, 255)
-				myLabel:SetColor( Color(0,0,0,255) )
-				mes2 = mes2 .. "You have the most current version of the MW2 Killstreaks"
-			else --When the user has a higher version then the server, which shouldn't happen
-			end
-			myLabel:SetText(mes1 .. mes2)
-			myLabel:SizeToContents()
-			DisplayPanel:SetSize(DisplayPanel:GetParent():GetWide() - 10, myLabel:GetTall() + 20)
-			x,y = DisplayPanel:GetPos()
-			setButton:SetPos( x + DisplayPanel:GetWide()/2 - setButton:GetWide()/2, y + DisplayPanel:GetTall() + 10 )
-		end
-		if serverVer > 0 then
-			paintPane(serverVer)
-		end
+
 	return VersionPanel;
 end
 
@@ -300,7 +322,7 @@ local function DevFrame(frame)
 			surface.SetDrawColor( 50, 50, 50, 255 ) -- Set our rect color below us; we do this so you can see items added to this panel
 			surface.DrawRect( 0, 0, DevPanel:GetWide(), DevPanel:GetTall() ) -- Draw the rect
 		end
-		
+		--[[
 		local overButton = vgui.Create("DButton")
 		overButton:SetText("Overview map")
 		overButton:SetPos(10, 10);
@@ -310,7 +332,7 @@ local function DevFrame(frame)
 			RunConsoleCommand( "gm_spawnsent", "sent_mestest" )
 		end				
 		DevPanel:AddItem(overButton)
-		
+		]]
 		local airButton = vgui.Create("DButton")
 		airButton:SetText("Air strike")
 		airButton:SetPos(10, 10);
@@ -344,6 +366,18 @@ local function DevFrame(frame)
 		end				
 		DevPanel:AddItem(harrierButton)
 		
+		local HeliButton = vgui.Create("DButton")
+		HeliButton:SetText("Attack Heli")
+		HeliButton:SetPos(10, 10);
+		HeliButton:SizeToContents()
+		HeliButton:SetSize( HeliButton:GetWide() + 20, HeliButton:GetTall() + 20 )
+		HeliButton.DoClick = function()
+			RunConsoleCommand( "gm_giveswep", "mw2_attack_helicopter" )
+			DermaFrame:Close();
+		end				
+		DevPanel:AddItem(HeliButton)
+		
+		--[[
 		local secButton = vgui.Create("DButton")
 		secButton:SetText("Sector Test")
 		secButton:SetPos(10, 10);
@@ -353,7 +387,7 @@ local function DevFrame(frame)
 			RunConsoleCommand( "gm_spawnsent", "sent_sectortest" )
 		end				
 		DevPanel:AddItem(secButton)
-		
+		]]
 	return DevPanel;
 end
 
