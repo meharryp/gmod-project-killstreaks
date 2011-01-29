@@ -4,12 +4,12 @@ include('shared.lua')
 ENT.Duration = 90;
 ENT.Timer = CurTime();
 ENT.Killstreaks = {"mw2_counterUAV", "mw2_SentryGun", "mw2_UAV", "sent_ac-130", "sent_harrier"}
-
+local empSound = Sound("killstreak_misc/em_pulse.wav");
 function ENT:Initialize()
 	self.Owner = self:GetVar("owner")		
 	self:SetModel("models/dav0r/camera.mdl") -- Just need a model, doesnt matter what it is
 	self:SetColor(255,255,255,0);
-	self:SetPos( Vector(0,0, self:FindSky()) )
+	self:SetPos( Vector(0,0, self:FindSky() - 200) )
 	self:PhysicsInit( SOLID_VPHYSICS )
 	self:SetMoveType( MOVETYPE_VPHYSICS )	
 	self:GetPhysicsObject():EnableGravity(false)
@@ -29,6 +29,11 @@ function ENT:Initialize()
 	self:Create_EMP_Effect()
 	self:Kill_Killstreaks()
 	self.Timer = CurTime() + self.Duration;
+	
+	self.EMPSoundEmmiter = CreateSound(self, empSound )
+	self.EMPSoundEmmiter:SetSoundLevel(0)
+	self.EMPSoundEmmiter:ChangeVolume(1)
+	self.EMPSoundEmmiter:Play() -- starts the sound	
 end
 
 function ENT:Think()
