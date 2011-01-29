@@ -1,5 +1,5 @@
-AddCSLuaFile( "cl_init.lua" )
-IncludeClientFile("cl_init.lua")
+--AddCSLuaFile( "cl_init.lua" )
+--IncludeClientFile("cl_init.lua")
 include( 'shared.lua' )
 
 ENT.MapBounds = { };
@@ -9,6 +9,8 @@ ENT.playerSpeeds = {}
 ENT.restrictMovement = false;
 ENT.DropLoc = nil;
 ENT.DropAng = nil;
+ENT.Friendlys = {"npc_gman", "npc_alyx", "npc_barney", "npc_citizen", "npc_vortigaunt", "npc_monk", "npc_dog", "npc_eli", "npc_fisherman", "npc_kleiner", "npc_magnusson", "npc_mossman" }
+
 function ENT:FindSky()
 
 	local maxheight = 16384
@@ -32,15 +34,11 @@ function ENT:FindSky()
 		hitSky = traceData.HitSky;
 		hitWorld = traceData.HitWorld;
 		if hitSky then
-			//MsgN("Hit the sky")
 			skyLocation = traceData.HitPos.z;
 			bool = false;
 		elseif hitWorld then
 			trace.start = traceData.HitPos + Vector(0,0,50);
-			//MsgN("hit the world, not the sky")
 		else 
-			//Msg("Hit ")
-			//MsgN(traceData.Entity:GetClass());
 			table.insert(filterList, traceData.Entity)
 		end
 			
@@ -66,14 +64,12 @@ function ENT:findGround()
 	trace.filter = filterList;
 
 	local traceData;
-	local hitSky;
 	local hitWorld;
 	local bool = true;
 	local maxNumber = 0;
 	local groundLocation = -1;
 	while bool do
 		traceData = util.TraceLine(trace);
-		hitSky = traceData.HitSky;
 		hitWorld = traceData.HitWorld;
 		if hitWorld then
 			groundLocation = traceData.HitPos.z;			
@@ -177,6 +173,13 @@ end
 
 function ENT:Initialize()	
 	self.Owner = self:GetVar("owner", nil)	
+	
+	if self.Owner == nil then 
+		self:Remove();
+		MsgN("You do not have permission to use this");
+		return;
+	end
+	
 	self.Wep = self:GetVar("Weapon", nil)
 	self.Sky = self:FindSky()
 	self:SetModel( self.Model );
@@ -206,6 +209,33 @@ function ENT:GetTeam()
 end
 
 function ENT:Destroy()
+end
+
+function ENT:FilterTarget(target) --This could all be done in one line, but to make it look nice and understandable I wrote it like this
+	if IsValid(target) && self:HasLOS(target) then
+		if target:IsNPC() then
+			if !table.HasValue( self.Friendlys, target:GetClass() ) then
+				return true;
+			end
+		elseif target:IsPlayer() then
+			if target != self.Owner && target:Team() != self.Owner:Team() && GetConVarNumber("sbox_plpldamage") != 0 then
+				return true;
+			end
+		end
+	end
+	return false;
+end
+
+function ENT:HasLOS(target)
+	local tracedata = {}
+		tracedata.start = self:GetPos()
+		tracedata.endpos = target:GetPos()
+		tracedata.filter = self
+	local trace = util.TraceLine(tracedata)
+	if IsValid(trace.Entity) && trace.Entity == target then
+		return true;	
+	end
+	return false;
 end
 
 function ENT:SetDropLocation(vec, ang)

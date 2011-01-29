@@ -1,21 +1,123 @@
-AddCSLuaFile( "cl_init.lua" )
-IncludeClientFile("cl_init.lua")
+--AddCSLuaFile( "cl_init.lua" )
+--IncludeClientFile("cl_init.lua")
 include( 'shared.lua' )
 
-ENT.Sectors = {};
+--Variables to be set by sub classes
 ENT.SearchSize = 0;
+ENT.SpawnHeight = 0;
+ENT.MaxHeight = 0;
+ENT.Damage = 0;
+ENT.AIGunner = true;
+ENT.BarrelAttachment = "";
+ENT.LifeDuration = 0;
+ENT.SectorHoldDuration = 0;
+ENT.MaxSpeed = 0;
+ENT.MinSpeed = 0;
+--Variables set by the entity for it to function.
+ENT.Ground = 0;
+ENT.Sectors = {};
+ENT.TempSectors = {};
+ENT.Target = nil;
+ENT.CurSector = nil;
+ENT.SectorDelay = CurTime();
+ENT.Life = CurTime();
+ENT.CurAngle = nil;
+ENT.TargetAngle = nil;
+ENT.IsInSector = false;
+ENT.CurHeight = 0;
+
+local function removeSector(tab, value)
+	for k,v in pairs(tab) do
+		if v == value then
+			table.remove(tab, k)
+		end
+	end
+end
 
 function ENT:MW2_Init()	
-
+	self.Ground = self:findGround();
 	self.MapBounds.xPos, self.MapBounds.xNeg = self:FindBounds(true);
 	self.MapBounds.yPos, self.MapBounds.yNeg = self:FindBounds(false);
 	self:SetupSectors();
+	self.TempSectors = self.Sectors;
+	self.CurHeight = self.Ground + self.SpawnHeight;
+	self:SetPos( Vector( self.MapBounds.xPos, 0, self.CurHeight ) )
+	self:SetAngles( Angle( 0, 180, 0 ) )
+	self.Life = CurTime() + self.LifeDuration
 	
 	self:Helicopter_Init()
 end
 
 function ENT:Helicopter_Init()	
 end
+
+function ENT:Think()
+	self:NextThink( CurTime() + 0.01 )
+	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );	
+	if self.CurSector == nil then
+		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
+		self.CurSector = table.Random(self.TempSectors);		
+		removeSector( self.TempSectors, self.CurSector);
+		self.IsInSector = false;
+		self.CurSector.MidPoint.Prop:SetColor(0,255,0,255)
+		MsgN("Pos = " .. tostring( self.CurSector.MidPoint.Prop:GetPos() ) )
+	end
+	
+	if !self.IsInSector then
+		self:MoveToArea();
+	else
+		if self.SectorDelay < CurTime() then
+			self.CurSector.MidPoint.Prop:SetColor(255,255,255,255)
+			self.CurSector = nil;
+		end
+	end
+	
+	if self.Life < CurTime() then
+		self:RemoveHeli();
+		return true;
+	end
+	
+	return true;
+end
+
+function ENT:MoveToArea()
+	local targetPos = Vector( self.CurSector.MidPoint.x, self.CurSector.MidPoint.y, self:GetPos().z )
+	local dis = self:GetPos():Distance( targetPos );
+	local speedFactor = 1;
+	if dis < self.SearchSize && dis >= 1 then
+		speedFactor = dis / self.SearchSize
+	elseif dis < 1 then
+		speedFactor = 0;
+		self.IsInSector = true;
+		self.SectorDelay = CurTime() + self.SectorHoldDuration;
+	end
+	local speed = self:CalculateSpeed(targetPos);
+	local dir = (targetPos - self:GetPos()):Normalize()
+	local ourAng = self:GetAngles();
+	local ang = ( (targetPos - self:GetPos()):Angle().y ) //- ourAng.y
+	ang = math.NormalizeAngle(ang)
+	--self.Owner:SetNetworkedString("AttackHeliYaw", ang )
+	--self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y )
+	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed)
+	local turnF = 1;
+	if math.Round(ang) > math.Round(ourAng.y) then
+		self:SetAngles( Angle( 0, ourAng.y + turnF, 0 ) )
+	elseif math.Round(ang) < math.Round(ourAng.y) then
+		self:SetAngles( Angle( 0, ourAng.y - turnF, 0 ) )
+	end
+	
+	self.PhysObj:SetVelocity( dir * (speed * speedFactor) )
+end
+
+function ENT:CalculateSpeed(targetPos)
+	local ang = ( (targetPos - self:GetPos()):Angle().y ) - self:GetAngles().y	
+	ang = math.NormalizeAngle(ang)
+	local factor = math.abs(ang)/180 -- 180 is the oppiste direction of where we are heading.
+	local speedDif = self.MaxSpeed - self.MinSpeed
+	local newSpeed = self.MaxSpeed - ( speedDif * math.Round(factor) )
+	return newSpeed;
+end
+
 function ENT:SetupSectors()
 	local x1, x2, y1, y2 = self.MapBounds.xPos, self.MapBounds.xNeg, self.MapBounds.yPos, self.MapBounds.yNeg;
 	local tX, tY = 0, 0;
@@ -46,38 +148,7 @@ function ENT:SetupSectors()
 	end
 	
 end
---[[
-function ENT:SetupSectors()
-	local x1, x2, y1, y2 = self.MapBounds.xPos, self.MapBounds.xNeg, self.MapBounds.yPos, self.MapBounds.yNeg;
-	local tX, tY = 0, 0;
-	local cap = 0;
-	local pos, neg = true, true;
-	while cap < 2 do
-		if pos then
-			if x1 - self.SearchSize >= 0 && y1 - self.SearchSize >= 0 then
-				tX = x1; tY = y1;
-				x1 = x1 - self.SearchSize; y1 = y1 - self.SearchSize;
-				self:InitSector( tX, tY, x1, y1)
-			else
-				tX = x1; tY = y1;
-				cap = cap + 1;
-				pos = false;
-			end
-		end
-		if neg then
-			if x2 + self.SearchSize <= 0 && y2 + self.SearchSize <= 0 then
-				tX = x2; tY = y2;
-				x2 = x2 + self.SearchSize; y2 = y2 + self.SearchSize;
-				self:InitSector( tX, tY, x2, y2)
-			else
-				tX = x2; tY = y2;
-				cap = cap + 1;
-				neg = false
-			end
-		end
-	end
-end
-]]
+
 function ENT:InitSector( x, y, x2, y2 )
 	local sec = {}
 	sec.x = x;
@@ -89,5 +160,68 @@ function ENT:InitSector( x, y, x2, y2 )
 	sec.MidPoint = {};
 	sec.MidPoint.x = midX;
 	sec.MidPoint.y = midY;
-	table.insert( self.Sectors, sec);
+	if self:PointInWorld( midX, midY ) then
+		table.insert( self.Sectors, sec);
+	end
+end
+
+function ENT:PointInWorld( x, y )
+	local minheight = -16384
+
+	local trace = {}
+	trace.start = Vector( x, y, self.Sky) ;
+	trace.endpos = Vector(x, y, minheight);
+	trace.filter = {self.Owner, self};
+
+	local hitHeight = util.TraceLine(trace).HitPos.z;
+	
+	if hitHeight < self.Ground + self.SpawnHeight + self.MaxHeight then
+		return true;
+	end
+	return false;
+end
+
+function ENT:EngageTarget()
+	
+	local dir = ( self.Target:LocalToWorld(self.Target:OBBCenter()) - self:GetPos() ):Normalize();
+	
+	bullet = {}		
+	bullet.Src		= self:GetAttachment(self:LookupAttachment(self.BarrelAttachment)).Pos;
+	bullet.Attacker = self.Owner;
+	bullet.Dir		= dir
+			
+	bullet.Spread		= Vector(0.01,0.01,0)
+	bullet.Num			= 1
+	bullet.Damage		= self.Damage
+	bullet.Force		= 5
+	bullet.Tracer		= 1	
+	bullet.TracerName	= "HelicopterTracer"
+	
+	self.Entity:FireBullets(bullet);
+	self:EmitSound("weapons/smg1/smg1_fire1.wav", 500, 200)
+end
+
+function ENT:FindTarget()
+	local maxVec = Vector( self.CurSector.x, self.CurSector.y, self.Ground + self.SpawnHeight + self.MaxHeight )
+	local minVec = Vector( self.CurSector.x2, self.CurSector.y2, self.Ground)
+	
+	local ents = ents.FindInBox( minVec, maxVec )
+	
+	for k,v in pairs(ents) do
+		if self:FilterTarget(v) then
+			self.Target = v;
+			break;
+		end
+	end	
+end
+
+function ENT:VerifyTarget()
+	if IsValid(self.Target) && self:HasLOS(self.Target) then
+		return true;
+	end
+	return false;
+end
+
+function ENT:RemoveHeli()
+	self:Remove();
 end

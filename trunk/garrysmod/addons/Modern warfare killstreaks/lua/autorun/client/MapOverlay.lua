@@ -134,6 +134,8 @@ local sky = FindSky()
 local x1,x2 = findBounds("x", sky) -- x1 is positive, x2 is negative
 local y1,y2 = findBounds("y", sky) -- y1 > 0; y2 < 0
 
+local xDis, yDis = math.abs(x1) + math.abs(x2), math.abs(y1) + math.abs(y2);
+
 local xyOffset = .05
 local x,y = ScrW() * xyOffset, ScrH() * xyOffset
 local w,h = math.Round( ScrW() - (x * 2 ) ), math.Round( ScrH() - ( y * 2 ) )
@@ -146,7 +148,7 @@ local function isInWorld( pos )
 	return false;
 end
 
-function math.AdvRound( val, d )
+local function advRound( val, d )
 	d = d or 0;
  
 	return math.Round( val * (10 ^ d) ) / (10 ^ d);
@@ -238,8 +240,8 @@ local function showOverlay(ent, select)
 		button.curX, button.curY = button:CursorPos();
 		button.curX = button.curX - button:GetWide()/2;
 		button.curY = button.curY - button:GetTall()/2;
-		button.curX = math.AdvRound( ( button.curX / (button:GetWide() * moveFactor) ) * button.fovScale, 2 );
-		button.curY = math.AdvRound( ( button.curY / (button:GetTall() * moveFactor) ) * button.fovScale, 2 );
+		button.curX = advRound( ( button.curX / (button:GetWide() * moveFactor) ) * button.fovScale, 2 );
+		button.curY = advRound( ( button.curY / (button:GetTall() * moveFactor) ) * button.fovScale, 2 );
 		if button.curX != 0 && isInWorld( viewPos - Vector(0, button.curX, 0) ) then viewPos = viewPos - Vector(0, button.curX, 0) end
 		if button.curY != 0 && isInWorld( viewPos - Vector(button.curY, 0, 0) ) then viewPos = viewPos - Vector(button.curY, 0, 0) end
 	end
