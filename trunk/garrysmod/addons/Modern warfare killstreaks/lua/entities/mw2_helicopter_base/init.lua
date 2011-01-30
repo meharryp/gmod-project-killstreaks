@@ -26,6 +26,8 @@ ENT.Life = CurTime();
 ENT.IsInSector = false;
 ENT.CurHeight = 0;
 ENT.turnDelay = CurTime();
+ENT.Pitch = 0;
+ENT.Roll = 0;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -51,9 +53,11 @@ end
 
 function ENT:Helicopter_Init()	
 end
+
 function ENT:Think()
 	self:NextThink( CurTime() + 0.01 )
-	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );	
+	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
+	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
 	
 	if self.CurSector == nil then
 		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
@@ -66,7 +70,8 @@ function ENT:Think()
 	
 	if !self.IsInSector then
 		self:MoveToArea();
-	else
+	else		
+		self:SetPitch(false)
 		if self.SectorDelay < CurTime() then
 			self.CurSector.MidPoint.Prop:SetColor(255,255,255,255)
 			self.CurSector = nil;
@@ -85,9 +90,10 @@ function ENT:MoveToArea()
 	local targetPos = Vector( self.CurSector.MidPoint.x, self.CurSector.MidPoint.y, self:GetPos().z )
 	local dis = self:GetPos():Distance( targetPos );
 	local speedFactor = 1;
-	if dis < self.SearchSize && dis >= 1 then
-		speedFactor = dis / (self.SearchSize / 2) 
+	if dis < self.SearchSize/4 && dis >= 1 then
+		speedFactor = dis / (self.SearchSize / 4) 
 		speedFactor = math.Clamp(speedFactor, 0, 1)
+		self:SetPitch(false)
 	elseif dis < 1 then
 		speedFactor = 0;
 		self.IsInSector = true;
@@ -102,16 +108,24 @@ function ENT:MoveToArea()
 		ourAng.y = 360 + ourAng.y
 	end
 	
-	--ang = math.NormalizeAngle(ang)
 	self.Owner:SetNetworkedString("AttackHeliYaw", ang )
 	self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y )
 	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed)
 	if self.turnDelay < CurTime() then
 		local turnF = 1;
-		if math.Round(ang) > math.Round(ourAng.y) then
-			self:SetAngles( Angle( 0, ourAng.y + turnF, 0 ) )
-		elseif math.Round(ang) < math.Round(ourAng.y) then
-			self:SetAngles( Angle( 0, ourAng.y - turnF, 0 ) )
+		ang = math.Round(ang);
+		if ang >= 360 then ang = 0; end
+		if ang > math.Round(ourAng.y) then			
+			self:SetPitch(false)
+			self:SetRoll(true)
+			self:SetAngles( Angle( self.Pitch, ourAng.y + turnF, self.Roll ) )
+		elseif ang < math.Round(ourAng.y) then			
+			self:SetPitch(false)
+			self:SetRoll(true)
+			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
+		else
+			self:SetPitch(true)
+			self:SetRoll(false)
 		end
 		self.turnDelay = CurTime() + 0.01;
 	end
@@ -126,6 +140,32 @@ function ENT:CalculateSpeed(targetPos)
 	local speedDif = self.MaxSpeed - self.MinSpeed
 	local newSpeed = self.MaxSpeed - ( speedDif * math.Round(factor) )
 	return newSpeed;
+end
+
+function ENT:SetPitch(inc)
+	if inc then
+		if self.Pitch <= 15 then
+			self.Pitch = self.Pitch + 1;
+		end
+	else
+		if self.Pitch > 0 then
+			self.Pitch = self.Pitch - 1;
+		end
+	end
+	self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self:GetAngles().r ) )
+end
+
+function ENT:SetRoll(inc)
+	if inc then
+		if self.Roll <= 20 then
+			self.Roll = self.Roll + 1;
+		end
+	else
+		if self.Roll > 0 then
+			self.Roll = self.Roll - 1;
+		end
+	end
+	self:SetAngles( Angle( self:GetAngles().p, self:GetAngles().y, self.Roll ) )
 end
 
 function ENT:SetupSectors()
