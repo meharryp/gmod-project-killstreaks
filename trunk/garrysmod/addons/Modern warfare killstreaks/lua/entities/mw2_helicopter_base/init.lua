@@ -21,10 +21,11 @@ ENT.Target = nil;
 ENT.CurSector = nil;
 ENT.SectorDelay = CurTime();
 ENT.Life = CurTime();
-ENT.CurAngle = nil;
-ENT.TargetAngle = nil;
+--ENT.CurAngle = nil;
+--ENT.TargetAngle = nil;
 ENT.IsInSector = false;
 ENT.CurHeight = 0;
+ENT.turnDelay = CurTime();
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -42,7 +43,7 @@ function ENT:MW2_Init()
 	self.TempSectors = self.Sectors;
 	self.CurHeight = self.Ground + self.SpawnHeight;
 	self:SetPos( Vector( self.MapBounds.xPos, 0, self.CurHeight ) )
-	self:SetAngles( Angle( 0, 180, 0 ) )
+	self:SetAngles( Angle( 0, 181, 0 ) )
 	self.Life = CurTime() + self.LifeDuration
 	
 	self:Helicopter_Init()
@@ -50,10 +51,10 @@ end
 
 function ENT:Helicopter_Init()	
 end
-
 function ENT:Think()
 	self:NextThink( CurTime() + 0.01 )
 	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );	
+	
 	if self.CurSector == nil then
 		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
 		self.CurSector = table.Random(self.TempSectors);		
@@ -85,7 +86,8 @@ function ENT:MoveToArea()
 	local dis = self:GetPos():Distance( targetPos );
 	local speedFactor = 1;
 	if dis < self.SearchSize && dis >= 1 then
-		speedFactor = dis / self.SearchSize
+		speedFactor = dis / (self.SearchSize / 2) 
+		speedFactor = math.Clamp(speedFactor, 0, 1)
 	elseif dis < 1 then
 		speedFactor = 0;
 		self.IsInSector = true;
@@ -95,15 +97,23 @@ function ENT:MoveToArea()
 	local dir = (targetPos - self:GetPos()):Normalize()
 	local ourAng = self:GetAngles();
 	local ang = ( (targetPos - self:GetPos()):Angle().y ) //- ourAng.y
-	ang = math.NormalizeAngle(ang)
-	--self.Owner:SetNetworkedString("AttackHeliYaw", ang )
-	--self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y )
+
+	if ourAng.y < 0 then
+		ourAng.y = 360 + ourAng.y
+	end
+	
+	--ang = math.NormalizeAngle(ang)
+	self.Owner:SetNetworkedString("AttackHeliYaw", ang )
+	self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y )
 	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed)
-	local turnF = 1;
-	if math.Round(ang) > math.Round(ourAng.y) then
-		self:SetAngles( Angle( 0, ourAng.y + turnF, 0 ) )
-	elseif math.Round(ang) < math.Round(ourAng.y) then
-		self:SetAngles( Angle( 0, ourAng.y - turnF, 0 ) )
+	if self.turnDelay < CurTime() then
+		local turnF = 1;
+		if math.Round(ang) > math.Round(ourAng.y) then
+			self:SetAngles( Angle( 0, ourAng.y + turnF, 0 ) )
+		elseif math.Round(ang) < math.Round(ourAng.y) then
+			self:SetAngles( Angle( 0, ourAng.y - turnF, 0 ) )
+		end
+		self.turnDelay = CurTime() + 0.01;
 	end
 	
 	self.PhysObj:SetVelocity( dir * (speed * speedFactor) )
