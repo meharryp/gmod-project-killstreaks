@@ -16,6 +16,8 @@ ENT.Barrels = {};
 
 function ENT:Helicopter_Init()	
 	self.PhysObj:EnableGravity(false)
+	
+	self.Barrels = {}
 	for i, v in pairs(self.Sectors) do
 		self:SpawnBarrel( v )
 	end
@@ -39,5 +41,5 @@ end
 function ENT:OnRemove()
 	for i, v in pairs(self.Barrels) do
 		v:Remove();
-	end
+	end	
 end

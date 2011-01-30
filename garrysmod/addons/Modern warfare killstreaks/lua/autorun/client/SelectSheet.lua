@@ -207,22 +207,27 @@ end
 local function updatedPopup()
 
 	local updatedPopup = vgui.Create('DFrame')
-		updatedPopup:SetSize(294, 178)
+		updatedPopup:SetSize(318, 68)
 		updatedPopup:SetPos(ScrW()/2 - updatedPopup:GetWide()/2, ScrH()/4 - updatedPopup:GetTall()/2 )
-		updatedPopup:SetTitle('Untitled DFrame')
-		updatedPopup:SetSizable(true)
-		updatedPopup:SetDeleteOnClose(false)
+		updatedPopup:SetTitle('SVN Upadated')
 		updatedPopup:MakePopup()
 
 	local pane = vgui.Create('DPanel', updatedPopup)
-		pane:SetSize(276, 140)
+		pane:SetSize(300, 50)
 		pane:SetPos(10, 30)
+		pane.Paint = function()
+			draw.RoundedBox( 6, 0, 0, pane:GetWide(), pane:GetTall(), Color( 50, 150, 50, 255 ) )
+		end
 
 	local Message = vgui.Create('DLabel', pane)
 		Message:SetPos(5, 5)
-		Message:SetText('The MW2 Killstreaks have been updated.\nYou should go and update your SVN to get the latest version')
+		Message:SetText('The MW2 Killstreaks have been updated.\nYou should go and update your SVN to get the latest version')		
+		Message:SetTextColor(Color(250, 240, 100, 255))
+		Message:SetFont("DefaultLarge")
 		Message:SizeToContents()
-		Message:SetTextColor(Color(0, 0, 0, 255))
+		
+		pane:SetSize( Message:GetWide() + 20, Message:GetTall() + 10)
+		updatedPopup:SetSize( pane:GetWide() + 15, pane:GetTall() + 10 + 30 )
 end
 
 local function getClientVersion()
