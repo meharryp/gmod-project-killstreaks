@@ -1,5 +1,4 @@
---AddCSLuaFile( "cl_init.lua" )
---IncludeClientFile("cl_init.lua")
+
 include( 'shared.lua' )
 
 --Variables to be set by sub classes
@@ -13,6 +12,7 @@ ENT.LifeDuration = 0;
 ENT.SectorHoldDuration = 0;
 ENT.MaxSpeed = 0;
 ENT.MinSpeed = 0;
+ENT.ShootTime = 0;
 --Variables set by the entity for it to function.
 ENT.Ground = 0;
 ENT.Sectors = {};
@@ -21,13 +21,16 @@ ENT.Target = nil;
 ENT.CurSector = nil;
 ENT.SectorDelay = CurTime();
 ENT.Life = CurTime();
---ENT.CurAngle = nil;
---ENT.TargetAngle = nil;
 ENT.IsInSector = false;
 ENT.CurHeight = 0;
 ENT.turnDelay = CurTime();
 ENT.Pitch = 0;
 ENT.Roll = 0;
+ENT.PrevSector = nil;
+ENT.FireDelay = CurTime();
+ENT.Leave = false;
+ENT.speedScaler = 0;
+ENT.TargetAcquired = false;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -37,8 +40,22 @@ local function removeSector(tab, value)
 	end
 end
 
+local function searchBox(startVec, endVec, size) -- startVec = Starting Vector, endVec = Ending Vector, size = The toatl width and length of the box.
+	local s, e = Vector(startVec.x, startVec.y, 0 ), Vector( endVec.x, endVec.y, 0);
+	
+	local ang = ( e - s ):Angle():Right();	
+	local st = s + (ang * size/2 )
+
+	ang = ( s - e ):Angle():Right();
+	local en = e + (ang * size/2 )
+
+	return Vector( st.x, st.y, startVec.z), Vector( en.x, en.y, endVec.z );
+	
+end
+
 function ENT:MW2_Init()	
 	self.Ground = self:findGround();
+	MsgN( self.Ground )
 	self.MapBounds.xPos, self.MapBounds.xNeg = self:FindBounds(true);
 	self.MapBounds.yPos, self.MapBounds.yNeg = self:FindBounds(false);
 	self:SetupSectors();
@@ -57,23 +74,38 @@ end
 function ENT:Think()
 	self:NextThink( CurTime() + 0.01 )
 	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
+	
+	if IsValid(self) && !self:IsInWorld() then
+		self:Remove();
+	end
+	
+	if self.Leave then
+		local curSpeed = Lerp(self.speedScaler, 0, self.MaxSpeed)
+		self.PhysObj:SetVelocity( self:GetForward() * curSpeed)
+		self.speedScaler = self.speedScaler + .01
+		self:SetPitch(true)
+		self:SetRoll(false)		
+		return true;
+	end
+	
 	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
 	
 	if self.CurSector == nil then
-		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
-		self.CurSector = table.Random(self.TempSectors);		
+		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end		
+		self.CurSector = self:FindSector();
 		removeSector( self.TempSectors, self.CurSector);
 		self.IsInSector = false;
-		self.CurSector.MidPoint.Prop:SetColor(0,255,0,255)
-		MsgN("Pos = " .. tostring( self.CurSector.MidPoint.Prop:GetPos() ) )
+		self.CurSector.MidPoint.Prop:SetColor(0,255,0,255) ---------------------
+		--MsgN("Pos = " .. tostring( self.CurSector.MidPoint.Prop:GetPos() ) )
 	end
 	
-	if !self.IsInSector then
+	if !self.IsInSector && !self.TargetAcquired then
 		self:MoveToArea();
-	else		
+	elseif self.IsInSector then
 		self:SetPitch(false)
 		if self.SectorDelay < CurTime() then
-			self.CurSector.MidPoint.Prop:SetColor(255,255,255,255)
+			self.CurSector.MidPoint.Prop:SetColor(255,255,255,255) ---------------
+			self.PrevSector = self.CurSector;
 			self.CurSector = nil;
 		end
 	end
@@ -83,22 +115,68 @@ function ENT:Think()
 		return true;
 	end
 	
+	if self.AIGunner then
+		if !self:VerifyTarget() then
+			self:FindTarget();
+		end
+		if self:VerifyTarget() then
+			--if self.FireDelay < CurTime() then
+				self:EngageTarget();
+				--self.FireDelay = CurTime() + self.ShootTime;
+			--end
+		end
+	end
+	
 	return true;
+end
+
+function ENT:FindSector()
+
+	local maxCount = 0;
+	local count = 0;
+	local maxSector = nil;
+	for k,v in pairs(self.TempSectors) do
+		count = v.Enemies();
+		if maxCount < count then
+			maxCount = count
+			maxSector = v;
+		end
+	end	
+	if maxSector != nil then
+		return maxSector;
+	else
+		return table.Random(self.TempSectors);
+	end
+	
 end
 
 function ENT:MoveToArea()
 	local targetPos = Vector( self.CurSector.MidPoint.x, self.CurSector.MidPoint.y, self:GetPos().z )
 	local dis = self:GetPos():Distance( targetPos );
+	--self.Owner:SetNetworkedString("AttackHeliDis", dis ) ----------------
 	local speedFactor = 1;
-	if dis < self.SearchSize/4 && dis >= 1 then
+	local disAway = 2;
+	if dis < self.SearchSize/4 && dis >= disAway then
 		speedFactor = dis / (self.SearchSize / 4) 
 		speedFactor = math.Clamp(speedFactor, 0, 1)
 		self:SetPitch(false)
-	elseif dis < 1 then
+	elseif dis < disAway then
 		speedFactor = 0;
 		self.IsInSector = true;
 		self.SectorDelay = CurTime() + self.SectorHoldDuration;
 	end
+	
+	if self.PrevSector then
+		local curSecPos = Vector( self.PrevSector.MidPoint.x, self.PrevSector.MidPoint.y, self:GetPos().z )
+		dis = self:GetPos():Distance( curSecPos );
+		if dis < self.SearchSize/4 then
+			speedFactor = dis / (self.SearchSize / 4) 
+			speedFactor = math.Clamp(speedFactor, .1, 1)
+		else
+			self.PrevSector = nil;
+		end
+	end
+	
 	local speed = self:CalculateSpeed(targetPos);
 	local dir = (targetPos - self:GetPos()):Normalize()
 	local ourAng = self:GetAngles();
@@ -108,9 +186,9 @@ function ENT:MoveToArea()
 		ourAng.y = 360 + ourAng.y
 	end
 	
-	self.Owner:SetNetworkedString("AttackHeliYaw", ang )
-	self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y )
-	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed)
+	--self.Owner:SetNetworkedString("AttackHeliYaw", ang ) ----------------
+	--self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y ) ----------------
+	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed) ----------------
 	if self.turnDelay < CurTime() then
 		local turnF = 1;
 		ang = math.Round(ang);
@@ -209,10 +287,25 @@ function ENT:InitSector( x, y, x2, y2 )
 	local midY = y - ( (y - y2) / 2)
 	sec.MidPoint = {};
 	sec.MidPoint.x = midX;
-	sec.MidPoint.y = midY;
+	sec.MidPoint.y = midY;	
+	
+	local function EnemyCount(entTab)
+		local count = 0;
+		for k,v in pairs(entTab) do
+			if self:FilterTarget(v, false) then count = count + 1; end		
+		end
+		return count;
+	end
+	
+	sec.Enemies = function()
+		local maxVec = Vector( x, y, self.Ground + self.SpawnHeight + self.MaxHeight )
+		local minVec = Vector( x2, y2, -16384)		
+		return EnemyCount( ents.FindInBox( minVec, maxVec ) );
+	end
+	
 	if self:PointInWorld( midX, midY ) then
 		table.insert( self.Sectors, sec);
-	end
+	end	
 end
 
 function ENT:PointInWorld( x, y )
@@ -231,12 +324,97 @@ function ENT:PointInWorld( x, y )
 	return false;
 end
 
+function ENT:FindTarget()
+	local pos = self:GetPos();	
+	local des = pos + ( self:GetForward() * self.SearchSize )
+	
+	pos.z = self.Ground + self.SpawnHeight + self.MaxHeight
+	des.z = -16384;
+	local maxVec, minVec = searchBox( pos , des)
+	--local maxVec = Vector( pos.x , pos.y, self.Ground + self.SpawnHeight + self.MaxHeight ) local minVec = Vector( pos.x - self.SearchSize/2, pos.y - self.SearchSize/2, -16384)
+	
+	local es = ents.FindInBox( minVec, maxVec )
+	self.Target = self:PrioritizeTargets(es)
+	
+	if self.Target == nil && self.IsInSector && self.CurSector != nil then
+		maxVec = Vector( self.CurSector.x, self.CurSector.y, self.Ground + self.SpawnHeight + self.MaxHeight )
+		minVec = Vector( self.CurSector.x2, self.CurSector.y2, -16384)
+		es = ents.FindInBox( minVec, maxVec )
+		
+		for k,v in pairs(es) do
+			if self:FilterTarget(v, true) then
+				self.Target = v;
+				break;
+			end
+		end			
+	end
+	if IsValid(self.Target) then
+		self.TargetAcquired = true;
+	end
+end
+
+function ENT:PrioritizeTargets(targets)
+	
+	local prio1 = {};
+	local prio2 = {};
+	for k,v in pairs(targets) do
+		if self:FilterTarget(v, true) && v:GetEnemy() == self then
+			table.insert(prio1, v)
+		elseif self:FilterTarget(v, true) then
+			table.insert(prio2, v)
+		end
+	end
+	
+	if table.Count(prio1) + table.Count(prio2) <= 0 then
+		return nil;	
+	elseif table.Count(prio1) > 0 then
+		return table.Random(prio1)
+	else
+		return table.Random(prio2)
+	end
+	
+end
+
+function ENT:VerifyTarget()
+	if IsValid(self.Target) && self:HasLOS(self.Target) then
+		return true;
+	end
+	self.Target = nil;
+	self.TargetAcquired = false;
+	return false;
+end
+
 function ENT:EngageTarget()
+	local ourAng = self:GetAngles();
+	local ang = ( self.Target:GetPos() - self:GetPos() ):Angle().y
+
+	if ourAng.y < 0 then
+		ourAng.y = 360 + ourAng.y
+	end
 	
-	local dir = ( self.Target:LocalToWorld(self.Target:OBBCenter()) - self:GetPos() ):Normalize();
-	
+	if self.turnDelay < CurTime() then
+		local turnF = 1;
+		ang = math.Round(ang);
+		if ang >= 360 then ang = 0; end
+		if ang > math.Round(ourAng.y) then					
+			self:SetAngles( Angle( self.Pitch, ourAng.y + turnF, self.Roll ) )
+		elseif ang < math.Round(ourAng.y) then			
+			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
+		elseif self.FireDelay < CurTime() then
+				self:ShootTarget();
+				self.FireDelay = CurTime() + self.ShootTime;
+		end	
+		self.turnDelay = CurTime() + 0.01
+	end
+end
+
+function ENT:ShootTarget()
+		
 	bullet = {}		
 	bullet.Src		= self:GetAttachment(self:LookupAttachment(self.BarrelAttachment)).Pos;
+	
+	local dir = ( self.Target:LocalToWorld(self.Target:OBBCenter()) - bullet.Src ):Normalize();
+	
 	bullet.Attacker = self.Owner;
 	bullet.Dir		= dir
 			
@@ -251,27 +429,7 @@ function ENT:EngageTarget()
 	self:EmitSound("weapons/smg1/smg1_fire1.wav", 500, 200)
 end
 
-function ENT:FindTarget()
-	local maxVec = Vector( self.CurSector.x, self.CurSector.y, self.Ground + self.SpawnHeight + self.MaxHeight )
-	local minVec = Vector( self.CurSector.x2, self.CurSector.y2, self.Ground)
-	
-	local ents = ents.FindInBox( minVec, maxVec )
-	
-	for k,v in pairs(ents) do
-		if self:FilterTarget(v) then
-			self.Target = v;
-			break;
-		end
-	end	
-end
-
-function ENT:VerifyTarget()
-	if IsValid(self.Target) && self:HasLOS(self.Target) then
-		return true;
-	end
-	return false;
-end
-
-function ENT:RemoveHeli()
-	self:Remove();
+function ENT:RemoveHeli()	
+	self.Leave = true;
+	self:SetNotSolid(true)
 end

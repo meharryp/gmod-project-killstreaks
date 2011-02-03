@@ -211,8 +211,14 @@ end
 function ENT:Destroy()
 end
 
-function ENT:FilterTarget(target) --This could all be done in one line, but to make it look nice and understandable I wrote it like this
-	if IsValid(target) && self:HasLOS(target) then
+function ENT:FilterTarget(target, LOS) 
+	local haslos;
+	if !LOS then haslos = true;
+	else
+		haslos = self:HasLOS(target);
+	end
+	
+	if IsValid(target) && haslos then
 		if target:IsNPC() then
 			if !table.HasValue( self.Friendlys, target:GetClass() ) then
 				return true;
