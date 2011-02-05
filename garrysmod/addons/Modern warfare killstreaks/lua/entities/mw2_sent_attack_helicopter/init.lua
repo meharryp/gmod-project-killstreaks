@@ -8,9 +8,11 @@ ENT.Damage = 35;
 ENT.BarrelAttachment = "Gun_barrel"
 ENT.LifeDuration = 120;
 ENT.SectorHoldDuration = 4;
-ENT.MaxSpeed = 1800;
+ENT.MaxSpeed = 2500;
 ENT.MinSpeed = 1000;
-ENT.ShootTime = .2;
+ENT.ShootTime = .1;
+ENT.MaxBullets = 50;
+ENT.BarrelCoolDownDelay = 3;
 
 --ENT.AIGunner = true;
 ENT.Barrels = {};

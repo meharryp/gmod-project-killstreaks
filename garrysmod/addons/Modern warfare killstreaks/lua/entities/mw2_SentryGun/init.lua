@@ -193,7 +193,9 @@ function ENT:Initialize()
 	self.bullseye:SetKeyValue("health", tostring(self.OurHealth))
 	self.bullseye:SetKeyValue("spawnflags", "262144")
 	self.bullseye:CallOnRemove("RemoveSentry", self.KillBullseye, self);
-	self.bullseye:SetParent(self);
+	self.bullseye:SetParent(self);	
+	self.bullseye.PhysgunDisabled = true
+	self.bullseye.m_tblToolsAllowed = string.Explode( " ", "none" )
 	self.bullseye:Spawn();
 	
 	self.PhysObj = self.Entity:GetPhysicsObject()

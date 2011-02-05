@@ -193,6 +193,9 @@ function ENT:Initialize()
 		self.PhysObj:Wake()
 	end	
 	
+	self.PhysgunDisabled = true
+	self.m_tblToolsAllowed = string.Explode( " ", "none" )
+	
 	if self.restrictMovement then
 		self.playerSpeeds = { self.Owner:GetWalkSpeed(), self.Owner:GetRunSpeed() }
 		GAMEMODE:SetPlayerSpeed(self.Owner, -1, -1)
@@ -235,11 +238,13 @@ end
 function ENT:HasLOS(target)
 	local tracedata = {}
 		tracedata.start = self:GetPos()
-		tracedata.endpos = target:GetPos()
+		tracedata.endpos = target:LocalToWorld(target:OBBCenter())
 		tracedata.filter = self
 	local trace = util.TraceLine(tracedata)
-	if IsValid(trace.Entity) && trace.Entity == target then
+	if IsValid(trace.Entity) && ( trace.Entity == target || !table.HasValue(self.Friendlys, target:GetClass()) ) then
 		return true;	
+	--elseif IsValid(trace.Entity) then
+		--MsgN(trace.Entity)
 	end
 	return false;
 end
