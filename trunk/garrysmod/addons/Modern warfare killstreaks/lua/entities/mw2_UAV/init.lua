@@ -16,7 +16,7 @@ function ENT:Think()
 	end
 	if( !self:IsInWorld()) then
 		MsgN("Is out of this world")
-		self:RemoveUAV()
+		self:Remove()
 	end
 end
 
@@ -32,7 +32,7 @@ function ENT:PhysicsUpdate()
 	end
 	
 	if self.FlightLength < CurTime() then
-		self:RemoveUAV()		
+		self:Remove()		
 	end
 end
 
@@ -65,6 +65,9 @@ function ENT:Initialize()
 	self.ang = Angle(0,-90,0);
 	
 	self:RunUAV();	
+	
+	self.PhysgunDisabled = true
+	self.m_tblToolsAllowed = string.Explode( " ", "none" )
 	
 	IsUAVActive = true;
 	self:GetVar("Weapon"):PlaySound();
@@ -103,22 +106,7 @@ function ENT:Destroy()
 		ParticleExplode:Spawn()
 		ParticleExplode:Activate()
 		ParticleExplode:Fire("kill", "", 20) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.		
-	self:RemoveUAV(); -- Remove our entity		
-end
- 
-function ENT:RemoveUAV()
-	--do other stuff when removeing cuav
-	umsg.Start("MW2_UAV_End", self.Owner);
-	umsg.End();
-	local plys = player.GetHumans()
-	for k, v in pairs(plys) do		
-	    if v:Team() == self.Owner:Team() && v != self.Owner then
-			umsg.Start("MW2_UAV_End", v);
-			umsg.End();
-	    end
-	end
-	IsUAVActive = false;
-	self:Remove()
+	self:Remove(); -- Remove our entity		
 end
 
 function ENT:FindSky()
@@ -237,4 +225,18 @@ function ENT:FindEdge()
 	end
 	
 	return WallLocation;
+end
+
+function ENT:OnRemove()
+	--do other stuff when removeing cuav
+	umsg.Start("MW2_UAV_End", self.Owner);
+	umsg.End();
+	local plys = player.GetHumans()
+	for k, v in pairs(plys) do		
+	    if v:Team() == self.Owner:Team() && v != self.Owner then
+			umsg.Start("MW2_UAV_End", v);
+			umsg.End();
+	    end
+	end
+	IsUAVActive = false;
 end

@@ -13,6 +13,8 @@ ENT.SectorHoldDuration = 0;
 ENT.MaxSpeed = 0;
 ENT.MinSpeed = 0;
 ENT.ShootTime = 0;
+ENT.MaxBullets = 0;
+ENT.BarrelCoolDownDelay = 0;
 --Variables set by the entity for it to function.
 ENT.Ground = 0;
 ENT.Sectors = {};
@@ -31,6 +33,9 @@ ENT.FireDelay = CurTime();
 ENT.Leave = false;
 ENT.speedScaler = 0;
 ENT.TargetAcquired = false;
+ENT.BulletsShot = 0;
+ENT.CoolDownTime = CurTime();
+ENT.CoolDown = false;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -55,15 +60,18 @@ end
 
 function ENT:MW2_Init()	
 	self.Ground = self:findGround();
-	MsgN( self.Ground )
+	
 	self.MapBounds.xPos, self.MapBounds.xNeg = self:FindBounds(true);
 	self.MapBounds.yPos, self.MapBounds.yNeg = self:FindBounds(false);
+	self.Sectors = {};
 	self:SetupSectors();
 	self.TempSectors = self.Sectors;
+	MsgN( table.Count( self.Sectors ) )
 	self.CurHeight = self.Ground + self.SpawnHeight;
 	self:SetPos( Vector( self.MapBounds.xPos, 0, self.CurHeight ) )
 	self:SetAngles( Angle( 0, 181, 0 ) )
 	self.Life = CurTime() + self.LifeDuration
+	self.speedScaler = 0;
 	
 	self:Helicopter_Init()
 end
@@ -73,11 +81,12 @@ end
 
 function ENT:Think()
 	self:NextThink( CurTime() + 0.01 )
+	
 	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
 	
 	if IsValid(self) && !self:IsInWorld() then
 		self:Remove();
-	end
+	end	
 	
 	if self.Leave then
 		local curSpeed = Lerp(self.speedScaler, 0, self.MaxSpeed)
@@ -88,42 +97,50 @@ function ENT:Think()
 		return true;
 	end
 	
+	if self.Life < CurTime() then
+		self:RemoveHeli();
+		return true;
+	end
+	
 	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
 	
 	if self.CurSector == nil then
-		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end		
-		self.CurSector = self:FindSector();
-		removeSector( self.TempSectors, self.CurSector);
-		self.IsInSector = false;
-		self.CurSector.MidPoint.Prop:SetColor(0,255,0,255) ---------------------
-		--MsgN("Pos = " .. tostring( self.CurSector.MidPoint.Prop:GetPos() ) )
+		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
+		local sec = self:FindSector();
+		if sec != self.PrevSector then
+			self.CurSector = sec;
+			--removeSector( self.TempSectors, self.CurSector);
+			self.IsInSector = false;
+			self.CurSector.MidPoint.Prop:SetColor(0,255,0,255) ---------------------
+			--MsgN("Pos = " .. tostring( self.CurSector.MidPoint.Prop:GetPos() ) )
+		end
 	end
 	
 	if !self.IsInSector && !self.TargetAcquired then
 		self:MoveToArea();
-	elseif self.IsInSector then
+	elseif self.IsInSector && self.CurSector != nil then
 		self:SetPitch(false)
 		if self.SectorDelay < CurTime() then
 			self.CurSector.MidPoint.Prop:SetColor(255,255,255,255) ---------------
 			self.PrevSector = self.CurSector;
 			self.CurSector = nil;
 		end
-	end
-	
-	if self.Life < CurTime() then
-		self:RemoveHeli();
-		return true;
-	end
+	end	
 	
 	if self.AIGunner then
 		if !self:VerifyTarget() then
 			self:FindTarget();
 		end
 		if self:VerifyTarget() then
-			--if self.FireDelay < CurTime() then
+			if self.BulletsShot <= self.MaxBullets then
 				self:EngageTarget();
-				--self.FireDelay = CurTime() + self.ShootTime;
-			--end
+			elseif !self.CoolDown then
+				self.CoolDownTime = CurTime() + self.BarrelCoolDownDelay
+				self.CoolDown = true;
+			elseif self.CoolDownTime > CurTime() then
+				self.CoolDown = false;
+				self.BulletsShot = 0;
+			end
 		end
 	end
 	
@@ -164,6 +181,10 @@ function ENT:MoveToArea()
 		speedFactor = 0;
 		self.IsInSector = true;
 		self.SectorDelay = CurTime() + self.SectorHoldDuration;
+	else
+		local curSpeed = Lerp(self.speedScaler, 0, self.MaxSpeed)
+		self.PhysObj:SetVelocity( self:GetForward() * curSpeed)
+		self.speedScaler = self.speedScaler + .01
 	end
 	
 	if self.PrevSector then
@@ -292,13 +313,14 @@ function ENT:InitSector( x, y, x2, y2 )
 	local function EnemyCount(entTab)
 		local count = 0;
 		for k,v in pairs(entTab) do
-			if self:FilterTarget(v, false) then count = count + 1; end		
+			if self:FilterTarget(v, true) then count = count + 1; end
 		end
 		return count;
 	end
 	
 	sec.Enemies = function()
 		local maxVec = Vector( x, y, self.Ground + self.SpawnHeight + self.MaxHeight )
+		--MsgN(maxVec.z)
 		local minVec = Vector( x2, y2, -16384)		
 		return EnemyCount( ents.FindInBox( minVec, maxVec ) );
 	end
@@ -326,7 +348,7 @@ end
 
 function ENT:FindTarget()
 	local pos = self:GetPos();	
-	local des = pos + ( self:GetForward() * self.SearchSize )
+	local des = pos + ( self:GetForward() * self.SearchSize * 1.5 )
 	
 	pos.z = self.Ground + self.SpawnHeight + self.MaxHeight
 	des.z = -16384;
@@ -398,8 +420,10 @@ function ENT:EngageTarget()
 		if ang >= 360 then ang = 0; end
 		if ang > math.Round(ourAng.y) then					
 			self:SetAngles( Angle( self.Pitch, ourAng.y + turnF, self.Roll ) )
+			self:SetRoll(false)
 		elseif ang < math.Round(ourAng.y) then			
 			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
+			self:SetRoll(false)
 		elseif self.FireDelay < CurTime() then
 				self:ShootTarget();
 				self.FireDelay = CurTime() + self.ShootTime;
@@ -418,7 +442,7 @@ function ENT:ShootTarget()
 	bullet.Attacker = self.Owner;
 	bullet.Dir		= dir
 			
-	bullet.Spread		= Vector(0.01,0.01,0)
+	bullet.Spread		= Vector(0.001,0.001,0)
 	bullet.Num			= 1
 	bullet.Damage		= self.Damage
 	bullet.Force		= 5
@@ -426,10 +450,12 @@ function ENT:ShootTarget()
 	bullet.TracerName	= "HelicopterTracer"
 	
 	self.Entity:FireBullets(bullet);
+	self.BulletsShot = self.BulletsShot + 1;
 	self:EmitSound("weapons/smg1/smg1_fire1.wav", 500, 200)
 end
 
 function ENT:RemoveHeli()	
 	self.Leave = true;
+	self.speedScaler = 0;
 	self:SetNotSolid(true)
 end

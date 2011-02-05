@@ -46,6 +46,9 @@ function ENT:Initialize()
 		self.PhysObj:Wake()
 	end
 	self.flightHeight = self:findGround() + 5000
+	
+	self.PhysgunDisabled = true
+	self.m_tblToolsAllowed = string.Explode( " ", "none" )
 
 	self:SetPos( Vector( self:FindEdge() - 500, 0, self.flightHeight) )
 	self.FlightLength = CurTime() + 30;
