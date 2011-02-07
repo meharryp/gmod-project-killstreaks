@@ -1,12 +1,12 @@
-AddCSLuaFile("cl_init.lua")
-AddCSLuaFile("shared.lua")
+--AddCSLuaFile("cl_init.lua")
+--AddCSLuaFile("shared.lua")
 include('shared.lua')
 
 ENT.ParentOnce = 0
 ENT.RemoveDel = CurTime()
 ENT.FlareSprite = NULL
 ENT.smoke = NULL
-
+--[[
 function ENT:SpawnFunction( ply, tr ) 
  	ent:Spawn()
  	ent:Activate() 
@@ -15,39 +15,34 @@ function ENT:SpawnFunction( ply, tr )
 	return ent 
 	
 end
-
+]]
 function ENT:Initialize()
 
+	self:SetModel("models/dav0r/hoverball.mdl")
+	self:SetOwner(self.Owner)
+	self:PhysicsInit(SOLID_VPHYSICS)
+	self:SetMoveType(MOVETYPE_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
+	self:SetColor(0,0,0,0)
 
-	self.Entity:SetModel("models/dav0r/hoverball.mdl")
-	self.Entity:SetOwner(self.Owner)
-	self.Entity:PhysicsInit(SOLID_VPHYSICS)
-	self.Entity:SetMoveType(MOVETYPE_VPHYSICS)
-	self.Entity:SetSolid(SOLID_VPHYSICS)
-	self.Entity:SetColor(0,0,0,0)
-
-	self.Entity:SetSolid(SOLID_VPHYSICS)	
-    local phys = self.Entity:GetPhysicsObject()
+	--self.Entity:SetSolid(SOLID_VPHYSICS)	
+    local phys = self:GetPhysicsObject()
 	if(phys:IsValid()) then phys:Wake() end
 	
 	phys:SetMass( 10 )
 	
 	self.RemoveDel = CurTime() + 5
 	
-	util.SpriteTrail( self.Entity, 0, Color(255,255,255,150), false, 10, 0, 0.4, 1/(3)*0.5, "trails/smoke.vmt" )
+	util.SpriteTrail( self, 0, Color(255,255,255,150), false, 10, 0, 0.4, 1/(3)*0.5, "trails/smoke.vmt" )
 
 end
 
 -------------------------------------------PHYS COLLIDE
 function ENT:PhysicsCollide( data, phys ) 
-	ent = data.HitEntity
+	--ent = data.HitEntity
 	self.Entity:Remove()
 end
--------------------------------------------PHYSICS =D
-function ENT:PhysicsUpdate( physics )
-			
-			
-end
+
 -------------------------------------------THINK
 function ENT:Think()
 		
@@ -89,8 +84,7 @@ function ENT:Think()
 		self.smoke:Spawn()
 		self.smoke:Activate()
 		self.smoke:SetParent(self.Entity)
-		self.smoke:Fire("TurnOn", "", 0)
-		
+		self.smoke:Fire("TurnOn", "", 0)		
 	end
 	
 	if self.RemoveDel < CurTime() then

@@ -44,7 +44,7 @@ ENT.newAngle = 0;
 ENT.direction = math.random(0,1)
 ENT.moveTime = CurTime();
 ENT.StartMove = false;
-ENT.AllowMove = true; -- change this to make it move
+ENT.AllowMove = true; -- True means the harrier will move, false = wont move.
 
 function ENT:PhysicsUpdate() -- Think
 	self.distance = math.Dist(self.Entity:GetPos().x, self.Entity:GetPos().y, self.hoverPos.x, self.hoverPos.y)
