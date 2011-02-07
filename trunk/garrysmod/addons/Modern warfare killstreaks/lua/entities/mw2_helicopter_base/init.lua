@@ -1,4 +1,3 @@
-
 include( 'shared.lua' )
 
 --Variables to be set by sub classes
@@ -15,6 +14,7 @@ ENT.MinSpeed = 0;
 ENT.ShootTime = 0;
 ENT.MaxBullets = 0;
 ENT.BarrelCoolDownDelay = 0;
+ENT.ourHealth = 0;
 --Variables set by the entity for it to function.
 ENT.Ground = 0;
 ENT.Sectors = {};
@@ -36,6 +36,9 @@ ENT.TargetAcquired = false;
 ENT.BulletsShot = 0;
 ENT.CoolDownTime = CurTime();
 ENT.CoolDown = false;
+ENT.Destroyed = false;
+ENT.Removed = false;
+ENT.bullseye = nil;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -66,12 +69,14 @@ function ENT:MW2_Init()
 	self.Sectors = {};
 	self:SetupSectors();
 	self.TempSectors = self.Sectors;
-	MsgN( table.Count( self.Sectors ) )
 	self.CurHeight = self.Ground + self.SpawnHeight;
 	self:SetPos( Vector( self.MapBounds.xPos, 0, self.CurHeight ) )
-	self:SetAngles( Angle( 0, 181, 0 ) )
+	self:SetAngles( Angle( 0, 180, 0 ) )
 	self.Life = CurTime() + self.LifeDuration
-	self.speedScaler = 0;
+	self.speedScaler = 0;	
+	
+	self:SetAiTarget();	
+	self:SetDisposition()
 	
 	self:Helicopter_Init()
 end
@@ -80,15 +85,13 @@ function ENT:Helicopter_Init()
 end
 
 function ENT:Think()
-	self:NextThink( CurTime() + 0.01 )
-	
-	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
+	self:NextThink( CurTime() + 0.001 )	
 	
 	if IsValid(self) && !self:IsInWorld() then
 		self:Remove();
 	end	
 	
-	if self.Leave then
+	if self.Leave && !self.Destroyed then
 		local curSpeed = Lerp(self.speedScaler, 0, self.MaxSpeed)
 		self.PhysObj:SetVelocity( self:GetForward() * curSpeed)
 		self.speedScaler = self.speedScaler + .01
@@ -97,11 +100,21 @@ function ENT:Think()
 		return true;
 	end
 	
-	if self.Life < CurTime() then
+	if self.Life < CurTime() && !self.Destroyed then
 		self:RemoveHeli();
 		return true;
 	end
 	
+	if self.Destroyed then
+		if self.turnDelay < CurTime() then
+			self:SetAngles( Angle( 0, self:GetAngles().y + 1, 0 ) )
+			self.PhysObj:ApplyForceCenter( Vector(1, 0, self.PhysObj:GetMass() * -500))
+			self.turnDelay = CurTime() + 0.005
+		end
+		return true;
+	end
+	
+	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
 	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
 	
 	if self.CurSector == nil then
@@ -223,6 +236,7 @@ function ENT:MoveToArea()
 			self:SetRoll(true)
 			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
 		else
+			--Raise height here, use code from DisTest.lua
 			self:SetPitch(true)
 			self:SetRoll(false)
 		end
@@ -454,8 +468,72 @@ function ENT:ShootTarget()
 	self:EmitSound("weapons/smg1/smg1_fire1.wav", 500, 200)
 end
 
+function ENT:OnTakeDamage(dmg)
+ 
+	if(self.ourHealth <= 0) then return; end -- If the health-variable is already zero or below it - do nothing
+	
+	if dmg:IsExplosionDamage() then
+		self:DestroyHeli();
+		return;
+	end
+	
+	self.ourHealth = self.ourHealth - dmg:GetDamage(); -- Reduce the amount of damage took from our health-variable
+ 
+	if(self.ourHealth <= 0) then -- If our health-variable is zero or below it
+		self:DestroyHeli(); -- Remove our entity
+	end
+	
+ end
+
+function ENT:DestroyHeli()
+	MsgN("Heli is Destroyed")
+	self.ourHealth = 0;
+	self.Destroyed = true;
+	self.PhysObj:EnableGravity(true)
+	self.turnDelay = CurTime() - 1;
+	self.Smoke = ents.Create("info_particle_system")
+	self.Smoke:SetPos(self:GetPos()  )
+	self.Smoke:SetKeyValue("effect_name", "smoke_burning_engine_01")
+	self.Smoke:SetKeyValue("start_active", "1")
+	self.Smoke:Spawn()
+	self.Smoke:Activate()
+	self.Smoke:SetParent(self)
+	--self.Smoke:Fire("kill", "", 0)
+	--self:Remove();
+end
+
+function ENT:PhysicsCollide( data, physobj )
+MsgN("Hit")
+	if !self.Destroyed || !data.HitEntity:IsWorld() then return end 
+	if !self.Removed then
+		self.Smoke:Fire("kill", "", 0)
+		self.Removed = true;
+		self:Remove();		
+	end
+end
+
 function ENT:RemoveHeli()	
 	self.Leave = true;
 	self.speedScaler = 0;
 	self:SetNotSolid(true)
+end
+
+function ENT:SetDisposition()
+	local tempEnemys = {};
+	local enemys = ents.FindByClass("npc_*")
+		for k, v in ipairs(enemys) do
+			if !table.HasValue( self.Friendlys, v:GetClass()) then
+				v:AddEntityRelationship(self.bullseye, D_HT, 99 )
+			end
+		end
+end
+
+function ENT:SetAiTarget()
+	self.bullseye = ents.Create("npc_bullseye");
+	self.bullseye:SetPos( self:LocalToWorld(self:OBBCenter()) );	
+	self.bullseye:SetKeyValue("spawnflags", "196608")
+	self.bullseye:SetParent(self);	
+	self.bullseye.PhysgunDisabled = true
+	self.bullseye.m_tblToolsAllowed = string.Explode( " ", "none" )
+	self.bullseye:Spawn();
 end

@@ -281,7 +281,7 @@ function ENT:Destroy()
 	ParticleExplode:SetKeyValue("start_active", "1")
 	ParticleExplode:Spawn()
 	ParticleExplode:Activate()
-	ParticleExplode:Fire("kill", "", 7) -- Be sure to leave this at 20, or else the explosion may not be fully rendered because 2/3 of the effects have smoke that stays for a while.
+	ParticleExplode:Fire("kill", "", 7)
 	self:ResetSequence( self:LookupSequence( "Die" ) )
 	self.FadeTimer = CurTime() + 10
 end

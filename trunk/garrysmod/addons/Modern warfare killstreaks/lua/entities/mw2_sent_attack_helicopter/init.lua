@@ -13,7 +13,7 @@ ENT.MinSpeed = 1000;
 ENT.ShootTime = .1;
 ENT.MaxBullets = 50;
 ENT.BarrelCoolDownDelay = 3;
-
+ENT.ourHealth = 1000;
 --ENT.AIGunner = true;
 ENT.Barrels = {};
 //util.Effect( "propspawn", ed, true, true )
@@ -25,8 +25,6 @@ function ENT:Helicopter_Init()
 	for i, v in pairs(self.Sectors) do
 		self:SpawnBarrel( v )
 	end
-	--local count = self.Sectors[1].Enemies()
-	--MsgN(count)
 end
 
 function ENT:SpawnBarrel(pos)
