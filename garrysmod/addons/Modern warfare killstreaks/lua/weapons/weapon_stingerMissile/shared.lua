@@ -68,13 +68,13 @@ function SWEP:Think()
 	if !( SERVER ) then	return end
 	
 	if self.Owner:KeyDown(IN_ATTACK2) && self.Missile == NULL && self.Target == NULL then	
-		trace = self.Owner:GetEyeTrace()		
-		if self.Target == NULL && trace.Hit && trace.Entity:IsValid() && !trace.Entity:IsNPC() && !trace.Entity:IsPlayer() then
+		local trace = self.Owner:GetEyeTrace()		
+		if self.Target == NULL && trace.Hit && trace.Entity:IsValid() && !trace.Entity:IsPlayer() then
 			if self.LockTime < CurTime() then
 				self.LockTime = CurTime() + 1
 				self.LockCount = self.LockCount + 1			
 				self.Owner:ChatPrint("Lock " .. self.LockCount)
-				if self.LockCount >= 3 then
+				if self.LockCount >= 2 then
 					self.Target = trace.Entity;
 					self.Owner:SetNetworkedBool("TargetLock", true)
 					self.Owner:ChatPrint("Ready to fire")
@@ -83,10 +83,9 @@ function SWEP:Think()
 		else
 			self.LockCount = 0;
 		end
-	elseif self.Owner:KeyDown(IN_ATTACK) && self.Target != NULL && self.Target:IsValid() && ( SERVER ) then
+	elseif self.Owner:KeyDown(IN_ATTACK) && IsValid(self.Target) then
 		self:FireMissile()
-		self:TakePrimaryAmmo(1)
-		
+		self:TakePrimaryAmmo(1)		
 	end
 	
 	if( self.Owner:KeyReleased( IN_ATTACK2  ) ) then

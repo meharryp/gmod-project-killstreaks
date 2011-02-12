@@ -32,6 +32,7 @@ ENT.PrevSector = nil;
 ENT.FireDelay = CurTime();
 ENT.Leave = false;
 ENT.speedScaler = 0;
+ENT.targetSpeedScaler = 0;
 ENT.TargetAcquired = false;
 ENT.BulletsShot = 0;
 ENT.CoolDownTime = CurTime();
@@ -39,6 +40,7 @@ ENT.CoolDown = false;
 ENT.Destroyed = false;
 ENT.Removed = false;
 ENT.bullseye = nil;
+ENT.CurSpeed = 0;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -81,8 +83,7 @@ function ENT:MW2_Init()
 	self:Helicopter_Init()
 end
 
-function ENT:Helicopter_Init()	
-end
+function ENT:Helicopter_Init() end
 
 function ENT:Think()
 	self:NextThink( CurTime() + 0.001 )	
@@ -108,13 +109,12 @@ function ENT:Think()
 	if self.Destroyed then
 		if self.turnDelay < CurTime() then
 			self:SetAngles( Angle( 0, self:GetAngles().y + 1, 0 ) )
-			self.PhysObj:ApplyForceCenter( Vector(1, 0, self.PhysObj:GetMass() * -500))
+			self.PhysObj:ApplyForceCenter( Vector(1, 0, self.PhysObj:GetMass() * -1000))
 			self.turnDelay = CurTime() + 0.005
 		end
 		return true;
 	end
 	
-	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
 	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
 	
 	if self.CurSector == nil then
@@ -139,6 +139,8 @@ function ENT:Think()
 			self.CurSector = nil;
 		end
 	end	
+	
+	self:SetPos( Vector( self:GetPos().x, self:GetPos().y, self.CurHeight ) );
 	
 	if self.AIGunner then
 		if !self:VerifyTarget() then
@@ -186,15 +188,52 @@ function ENT:MoveToArea()
 	--self.Owner:SetNetworkedString("AttackHeliDis", dis ) ----------------
 	local speedFactor = 1;
 	local disAway = 2;
+	
+	
+	local speed = self:CalculateSpeed(targetPos);
+	local dir = (targetPos - self:GetPos()):Normalize()
+	local ourAng = self:GetAngles();
+	local ang = ( (targetPos - self:GetPos()):Angle().y ) //- ourAng.y
+
+	if ourAng.y < 0 then
+		ourAng.y = 360 + ourAng.y
+	end
+	
+	--self.Owner:SetNetworkedString("AttackHeliYaw", ang ) ----------------
+	--self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y ) ----------------
+	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed) ----------------
+	local move = true;
+	if self.turnDelay < CurTime() then
+		local turnF = 1;
+		ang = math.Round(ang);
+		if ang >= 360 then ang = 0; end
+		if ang > math.Round(ourAng.y) then			
+			self:SetPitch(false)
+			self:SetRoll(true)
+			self:SetAngles( Angle( self.Pitch, ourAng.y + turnF, self.Roll ) )
+		elseif ang < math.Round(ourAng.y) then			
+			self:SetPitch(false)
+			self:SetRoll(true)
+			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
+		else
+			move = self:CalculateHeight(targetPos)--Raise height here, use code from DisTest.lua			
+			self:SetPitch(true)
+			self:SetRoll(false)
+		end
+		self.turnDelay = CurTime() + 0.01;
+	end
+	
 	if dis < self.SearchSize/4 && dis >= disAway then
 		speedFactor = dis / (self.SearchSize / 4) 
 		speedFactor = math.Clamp(speedFactor, 0, 1)
 		self:SetPitch(false)
+		self.PhysObj:SetVelocity( dir * (speed * speedFactor) )
 	elseif dis < disAway then
 		speedFactor = 0;
 		self.IsInSector = true;
 		self.SectorDelay = CurTime() + self.SectorHoldDuration;
-	else
+		self.PhysObj:SetVelocity( dir * (speed * speedFactor) )
+	elseif move then
 		local curSpeed = Lerp(self.speedScaler, 0, self.MaxSpeed)
 		self.PhysObj:SetVelocity( self:GetForward() * curSpeed)
 		self.speedScaler = self.speedScaler + .01
@@ -210,40 +249,64 @@ function ENT:MoveToArea()
 			self.PrevSector = nil;
 		end
 	end
-	
-	local speed = self:CalculateSpeed(targetPos);
-	local dir = (targetPos - self:GetPos()):Normalize()
-	local ourAng = self:GetAngles();
-	local ang = ( (targetPos - self:GetPos()):Angle().y ) //- ourAng.y
+end
 
-	if ourAng.y < 0 then
-		ourAng.y = 360 + ourAng.y
-	end
-	
-	--self.Owner:SetNetworkedString("AttackHeliYaw", ang ) ----------------
-	--self.Owner:SetNetworkedString("AttackHeliAng", ourAng.y ) ----------------
-	--self.Owner:SetNetworkedString("AttackHeliSpeed", speed) ----------------
-	if self.turnDelay < CurTime() then
-		local turnF = 1;
-		ang = math.Round(ang);
-		if ang >= 360 then ang = 0; end
-		if ang > math.Round(ourAng.y) then			
-			self:SetPitch(false)
-			self:SetRoll(true)
-			self:SetAngles( Angle( self.Pitch, ourAng.y + turnF, self.Roll ) )
-		elseif ang < math.Round(ourAng.y) then			
-			self:SetPitch(false)
-			self:SetRoll(true)
-			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
-		else
-			--Raise height here, use code from DisTest.lua
-			self:SetPitch(true)
-			self:SetRoll(false)
+function ENT:CalculateHeight(targetPos)
+	local cur = self:GetPos() -- Cur postion
+	local des = targetPos; -- Destination
+	local data = util.QuickTrace( self:GetPos(), self:GetForward() * self.SearchSize/2, { self } );  -- obstructions
+	local hitpos = data.HitPos;
+	if !data.HitWorld then
+		self.CurHeight = self.CurHeight - 3;
+		if self.Ground + self.SpawnHeight > self.CurHeight then
+			self.CurHeight = self.Ground + self.SpawnHeight;
 		end
-		self.turnDelay = CurTime() + 0.01;
+		return true;
 	end
-	
-	self.PhysObj:SetVelocity( dir * (speed * speedFactor) )
+	--When pos3 is in line with cur and des
+	local dis1 = cur:Distance(des) -- Distance between point 1 and point 2
+	local dis2 = cur:Distance(hitpos) -- Distance between point 1 and point 3
+	local totalHeight = self.Ground + self.SpawnHeight + self.MaxHeight;
+	if dis1 > dis2 then
+		if self.CurHeight < totalHeight && self:CanRaise() then		
+			if dis2 < 1000 then
+				self.CurHeight = self.CurHeight + 3;
+				return false -- We are to close to a building or wall, so we have to stop to move up.
+			else
+				self.CurHeight = self.CurHeight + 3;
+				return true; -- continue moving forward
+			end
+		end
+	else
+		if self.Ground + self.SpawnHeight < self.CurHeight then
+			self.CurHeight = self.CurHeight - 3;
+		end
+		return true;
+	end
+	if self.Ground + self.SpawnHeight > self.CurHeight then
+		self.CurHeight = self.Ground + self.SpawnHeight;
+	end
+	return true;
+end
+
+function ENT:CanRaise()
+	local hitPos = util.QuickTrace( self:GetPos(), self:GetForward() * self.SearchSize/2, { self } ).HitPos
+
+	local loc = hitPos + ( self:GetForward() * 200)
+
+	local trace = {}
+	trace.start = Vector( loc.x, loc.y, self.Sky )
+	trace.endpos = loc
+	local tr = util.TraceLine(trace)
+
+	local hit = tr.HitPos + Vector(0,0, 200);
+	local totalHeight = self.Ground + self.SpawnHeight + self.MaxHeight;
+	if hit.z <= totalHeight then
+		return true;
+	else
+		self.CurSector = nil
+		return false;
+	end	
 end
 
 function ENT:CalculateSpeed(targetPos)
@@ -386,6 +449,9 @@ function ENT:FindTarget()
 	end
 	if IsValid(self.Target) then
 		self.TargetAcquired = true;
+		self.targetSpeedScaler = 0;
+		local vel = self.PhysObj:GetVelocity()
+		self.CurSpeed = vel:Dot( vel:GetNormal() )
 	end
 end
 
@@ -419,7 +485,7 @@ function ENT:VerifyTarget()
 	self.TargetAcquired = false;
 	return false;
 end
-
+-- Distance to move to enemy 2300
 function ENT:EngageTarget()
 	local ourAng = self:GetAngles();
 	local ang = ( self.Target:GetPos() - self:GetPos() ):Angle().y
@@ -444,6 +510,25 @@ function ENT:EngageTarget()
 		end	
 		self.turnDelay = CurTime() + 0.01
 	end
+	if !self.IsInSector then
+		local len = 1800;
+		local p1, p2 = self:GetPos(), self.Target:GetPos()
+		p1.z = 0; p2.z = 0;
+		local dis = math.Dist( p1.x, p1.y, p2.x, p2.y)
+		if dis >= len + 300 then
+			self.PhysObj:SetVelocity( self:GetForward() * self.CurSpeed )
+			self:SetPitch(true)
+			self:SetRoll(false)
+		elseif dis < len + 300 then
+			local curSpeed = Lerp(self.targetSpeedScaler, 0, self.MaxSpeed)
+			self.PhysObj:SetVelocity( self:GetForward() * curSpeed)
+			self.targetSpeedScaler = math.Clamp(self.targetSpeedScaler - .01, 0 , 1)
+		elseif dis < len then
+			self.PhysObj:SetVelocity( self:GetForward() * 0)
+			self:SetPitch(false)
+			self:SetRoll(false)
+		end
+	end
 end
 
 function ENT:ShootTarget()
@@ -456,7 +541,7 @@ function ENT:ShootTarget()
 	bullet.Attacker = self.Owner;
 	bullet.Dir		= dir
 			
-	bullet.Spread		= Vector(0.001,0.001,0)
+	bullet.Spread		= Vector(0.02,0.02,0)
 	bullet.Num			= 1
 	bullet.Damage		= self.Damage
 	bullet.Force		= 5
@@ -503,7 +588,6 @@ function ENT:DestroyHeli()
 end
 
 function ENT:PhysicsCollide( data, physobj )
-MsgN("Hit")
 	if !self.Destroyed || !data.HitEntity:IsWorld() then return end 
 	if !self.Removed then
 		self.Smoke:Fire("kill", "", 0)
