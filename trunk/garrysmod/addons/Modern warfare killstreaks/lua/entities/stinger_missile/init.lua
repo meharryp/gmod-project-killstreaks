@@ -12,8 +12,13 @@ function ENT:PhysicsUpdate()
 	end	
 	
 	if IsValid(self.Target) then
-		local vec3 = self.Target:GetPos() - self:GetPos();
-		local ang = vec3:Angle()
+		local ang = ( self.Target:GetPos() - self:GetPos() ):Angle();
+		local ourAng = self:GetAngles();
+		local turnF = 10;
+		self.yaw = math.ApproachAngle( math.Round(ourAng.y), math.Round(ang.y), turnF )			
+		self.pitch = math.ApproachAngle( math.Round(ourAng.p), math.Round(ang.p), turnF )
+		self:SetAngles( Angle( self.pitch, self.yaw, ourAng.r ) )
+		
 		self:SetAngles(ang)
 		self:GetPhysicsObject():SetVelocity(self:GetForward() * 2500)
 	end

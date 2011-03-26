@@ -41,6 +41,7 @@ ENT.Destroyed = false;
 ENT.Removed = false;
 ENT.bullseye = nil;
 ENT.CurSpeed = 0;
+ENT.radius = 1500;
 
 local function removeSector(tab, value)
 	for k,v in pairs(tab) do
@@ -116,6 +117,17 @@ function ENT:Think()
 	end
 	
 	--self:SetAngles( Angle( self.Pitch, self:GetAngles().y, self.Roll ) )
+	
+	if self.Flares > 0 then
+		
+		local entsInSphere = ents.FindInSphere( self:GetPos(), self.radius )
+		for k,v in pairs(entsInSphere) do
+			if v != self && v:GetClass() != "mw2_sent_decoyMissile" then
+				self:DeployFlares( v,  self:GetPos() )
+			end
+		end	
+		
+	end
 	
 	if self.CurSector == nil then
 		if table.Count(self.TempSectors) <= 0 then self.TempSectors = self.Sectors; end
@@ -215,14 +227,14 @@ function ENT:MoveToArea()
 			self:SetPitch(false)
 			self:SetRoll(true)
 			self:SetAngles( Angle( self.Pitch, ourAng.y - turnF, self.Roll ) )
-		else
-			move = self:CalculateHeight(targetPos)--Raise height here, use code from DisTest.lua			
+		else			
 			self:SetPitch(true)
 			self:SetRoll(false)
 		end
 		self.turnDelay = CurTime() + 0.01;
 	end
-	
+	move = self:CalculateHeight(targetPos)--Raise height here, use code from DisTest.lua			
+	if !move then return end
 	if dis < self.SearchSize/4 && dis >= disAway then
 		speedFactor = dis / (self.SearchSize / 4) 
 		speedFactor = math.Clamp(speedFactor, 0, 1)
@@ -254,7 +266,7 @@ end
 function ENT:CalculateHeight(targetPos)
 	local cur = self:GetPos() -- Cur postion
 	local des = targetPos; -- Destination
-	local data = util.QuickTrace( self:GetPos(), self:GetForward() * self.SearchSize/2, { self } );  -- obstructions
+	local data = util.QuickTrace( self:GetPos(), self.PhysObj:GetVelocity():GetNormal() * self.SearchSize/2, { self } );  -- obstructions
 	local hitpos = data.HitPos;
 	if !data.HitWorld then
 		self.CurHeight = self.CurHeight - 3;
@@ -299,7 +311,7 @@ function ENT:CanRaise()
 	trace.endpos = loc
 	local tr = util.TraceLine(trace)
 
-	local hit = tr.HitPos + Vector(0,0, 200);
+	local hit = tr.HitPos + Vector(0,0, 500);
 	local totalHeight = self.Ground + self.SpawnHeight + self.MaxHeight;
 	if hit.z <= totalHeight then
 		return true;
