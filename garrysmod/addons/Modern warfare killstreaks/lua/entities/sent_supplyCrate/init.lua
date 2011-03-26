@@ -115,7 +115,7 @@ end
 
 function ENT:Think()
 	if self.GiveReward then
-		addKillStreak(self.Winner, self.Reward, true)
+		self.Winner.MW2KV.addKillStreak(self.Winner, self.Reward, true)
 		for k,v in pairs(self.Players) do 
 			v:SetNetworkedBool("SupplyCrate_DrawBarBool", false)
 			v.UseBool = false;
