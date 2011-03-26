@@ -1,11 +1,11 @@
 
 if ( CLIENT ) then
-	SWEP.PrintName			= "Stealth bomber test"
+	SWEP.PrintName			= "Stealth bomber"
 end
 SWEP.UseLaptop = true;
 SWEP.Base 				= "mw2_killstreak_wep_base"
-SWEP.AdminSpawnable		= false
-SWEP.Ent = "sent_stealth_bomber_test"
+SWEP.AdminSpawnable		= true
+SWEP.Ent = "sent_stealth_bomber"
 SWEP.DelaySound = true;
 
 function SWEP:PlaySound()

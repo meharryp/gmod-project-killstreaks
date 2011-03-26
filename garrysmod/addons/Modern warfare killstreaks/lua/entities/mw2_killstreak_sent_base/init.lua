@@ -9,7 +9,8 @@ ENT.playerSpeeds = {}
 ENT.restrictMovement = false;
 ENT.DropLoc = nil;
 ENT.DropAng = nil;
-ENT.Friendlys = {"npc_gman", "npc_alyx", "npc_barney", "npc_citizen", "npc_vortigaunt", "npc_monk", "npc_dog", "npc_eli", "npc_fisherman", "npc_kleiner", "npc_magnusson", "npc_mossman" }
+ENT.Flares = 0;
+ENT.FlareSpawnPos = nil;
 
 function ENT:FindSky()
 
@@ -242,11 +243,64 @@ function ENT:HasLOS(target)
 		tracedata.filter = self
 	local trace = util.TraceLine(tracedata)
 	if IsValid(trace.Entity) && ( trace.Entity == target || !table.HasValue(self.Friendlys, target:GetClass()) ) then
-		return true;	
-	--elseif IsValid(trace.Entity) then
-		--MsgN(trace.Entity)
+		return true;
 	end
 	return false;
+end
+
+local function SpawnFlares(self, fpos)
+	local flare = nil;
+	for i = 0 , 20 do 
+		local flares = ents.Create( "sent_mw2_flares" )	
+		flares:SetPos( fpos )
+		flares:Spawn()
+		local Phys = flares:GetPhysicsObject()
+		
+		if Phys:IsValid() then
+			Phys:Wake()
+			Phys:ApplyForceCenter(Vector(math.random(5-40, 40), math.random(5-40, 40), math.random(5-40, 40)) * Phys:GetMass())
+		end
+		flares:Activate()
+		constraint.NoCollide( self, flares, 0, 0 )
+		if flare == nil then flare = flares end -- returns the first flare spawned so we can track it.
+	end	
+	
+	return flare;
+end
+
+function ENT:DeployFlares( obj, fpos )
+	if self.Flares <= 0 then return end
+	if obj.FlareSpawned then return end
+	local vel = obj:GetVelocity();
+	if vel:Dot(vel:GetNormal()) <= 0 then return end
+	
+	local trace = util.QuickTrace( obj:GetPos(), vel:GetNormal() * 10000, {obj})
+	if IsValid(trace.Entity ) && trace.Entity == self then
+		self:SpawnDecoy( obj, SpawnFlares(self, fpos) )
+	end
+	obj.FlareSpawned = true;
+	self.Flares = self.Flares - 1;
+end
+
+function ENT:SpawnDecoy(missile, target)
+
+	local decoy = ents.Create("mw2_sent_decoyMissile")
+	decoy:SetVar( "Model", missile:GetModel() );
+	decoy:SetVar( "Owner", missile:GetOwner() or missile.Owner );
+	decoy:SetVar( "Target", target );
+	local phys = missile:GetPhysicsObject()
+	local vel = nil;
+	if IsValid(phys) then
+		vel = phys:GetVelocity( )
+	else
+		vel = missile:GetVelocity()
+	end
+	decoy:SetVar( "Velocity", vel:Dot( vel:GetNormal() ) );
+	
+	local pos = missile:GetPos();
+	missile:Remove();
+	decoy:SetPos(pos);	
+	decoy:Spawn();
 end
 
 function ENT:SetDropLocation(vec, ang)

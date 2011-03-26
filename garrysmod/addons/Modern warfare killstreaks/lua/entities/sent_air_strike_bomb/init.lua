@@ -37,7 +37,7 @@ end
 
 function ENT:Explosion()
 
-	ParticleExplode = ents.Create("info_particle_system")
+	local ParticleExplode = ents.Create("info_particle_system")
 	ParticleExplode:SetPos(self:GetPos())
 	ParticleExplode:SetKeyValue("effect_name", "stealth_explode")
 	ParticleExplode:SetKeyValue("start_active", "1")

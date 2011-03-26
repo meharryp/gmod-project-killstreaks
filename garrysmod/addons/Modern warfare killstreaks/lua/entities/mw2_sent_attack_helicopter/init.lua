@@ -4,7 +4,7 @@ ENT.SearchSize = 5000;
 ENT.Model = "models/COD4/Cobra/cobra.mdl"
 ENT.SpawnHeight = 2000;
 ENT.MaxHeight = 1500;
-ENT.Damage = 35;
+ENT.Damage = 20;
 ENT.BarrelAttachment = "Gun_barrel"
 ENT.LifeDuration = 120;
 ENT.SectorHoldDuration = 4;
@@ -16,11 +16,11 @@ ENT.BarrelCoolDownDelay = 3;
 ENT.ourHealth = 1000;
 --ENT.AIGunner = true;
 ENT.Barrels = {};
+ENT.Flares = 1;
 //util.Effect( "propspawn", ed, true, true )
 
 function ENT:Helicopter_Init()	
 	self.PhysObj:EnableGravity(false)
-	
 	self.Barrels = {}
 	for i, v in pairs(self.Sectors) do
 		self:SpawnBarrel( v )
