@@ -1,11 +1,13 @@
 include( 'shared.lua' )
 
 ENT.SearchSize = 5000;
-ENT.Model = "models/COD4/Cobra/cobra.mdl"
+//ENT.Model = "models/COD4/Cobra/cobra.mdl"
+ENT.Model = "models/COD4/cobra_anim.mdl"
 ENT.SpawnHeight = 2000;
 ENT.MaxHeight = 1500;
 ENT.Damage = 20;
-ENT.BarrelAttachment = "Gun_barrel"
+ENT.BarrelAttachment = "muzzle"
+ENT.SpinAnimation = "tailspin_loop"
 ENT.LifeDuration = 120;
 ENT.SectorHoldDuration = 4;
 ENT.MaxSpeed = 2500;

@@ -23,9 +23,8 @@ local function giveAmmo(pl)
 end
 
 local function addKillStreak(ply, str, isCare)
-	if str == "ammo" then giveAmmo(ply);
-		return;
-	end
+	if str == "ammo" then giveAmmo(ply); return; end
+	
 	if isCare == nil then isCare = false; end
 	ply:SetNetworkedString("CurrentMW2KillStreak", str)
 	ply:SetNetworkedString("MW2NewKillstreak", str .. "+".. ply.MW2KV.StreakID)
