@@ -15,6 +15,7 @@ ENT.ShootTime = 0;
 ENT.MaxBullets = 0;
 ENT.BarrelCoolDownDelay = 0;
 ENT.ourHealth = 0;
+ENT.SpinAnimation = "";
 --Variables set by the entity for it to function.
 ENT.Ground = 0;
 ENT.Sectors = {};
@@ -108,7 +109,7 @@ function ENT:Think()
 	end
 	
 	if self.Destroyed then
-		if self.turnDelay < CurTime() then
+		if self.SpinAnimation == "" && self.turnDelay < CurTime() then
 			self:SetAngles( Angle( 0, self:GetAngles().y + 1, 0 ) )
 			self.PhysObj:ApplyForceCenter( Vector(1, 0, self.PhysObj:GetMass() * -1000))
 			self.turnDelay = CurTime() + 0.005
@@ -586,6 +587,9 @@ function ENT:DestroyHeli()
 	MsgN("Heli is Destroyed")
 	self.ourHealth = 0;
 	self.Destroyed = true;
+	if self.SpinAnimation != "" then
+		self:ResetSequence( self:LookupSequence( self.SpinAnimation ) )
+	end
 	self.PhysObj:EnableGravity(true)
 	self.turnDelay = CurTime() - 1;
 	self.Smoke = ents.Create("info_particle_system")

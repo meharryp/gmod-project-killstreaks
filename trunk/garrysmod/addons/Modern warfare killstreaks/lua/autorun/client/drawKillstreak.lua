@@ -13,7 +13,7 @@ local showNewKillstreak = false;
 local curStreak = nil;
 local id = 0;
 
-local function playAcquiredSound(soundName)
+local function playAcquiredSound(soundName)//
 	if soundName == "stealth_bomber" then
 		soundName = "precision_airstrike";
 	end
