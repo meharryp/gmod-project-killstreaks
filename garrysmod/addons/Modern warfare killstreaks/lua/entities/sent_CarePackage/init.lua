@@ -57,11 +57,12 @@ end
 function ENT:Initialize()	
 	self.Owner = self:GetVar("owner")		
 	self.dropPos = self:GetVar("PackageDropZone", NULL) -- Needs to be set from the weapon
-	self.ground = findGround() + 1200;
-	//self.ground = self.dropPos.z + 2000;
+	//self.ground = findGround() + 1200;
+	self.ground = self.dropPos.z + 1200;
 	
 	x = findWall("x", self.ground)
 	self.spawnZone = Vector(x,self.dropPos.y,self.ground);
+	//self.spawnZone = Vector(x,self.dropPos.y,self.dropPos.z + 1200);
 	self.StartAngle = Angle(0, 180, 0);	
 		
 	self:SetModel( self.Model)
