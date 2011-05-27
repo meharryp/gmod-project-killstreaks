@@ -5,7 +5,7 @@ local flyBySound = Sound("killstreak_misc/jet_fly_by.wav");
 
 ENT.dropPos = NULL;
 local radius = 500;
-local jetModel = Model("models/military2/air/air_f35_l.mdl")
+ENT.Model = Model("models/military2/air/air_f35_l.mdl")
 ENT.ground = 0;
 ENT.dropDelay = CurTime();
 ENT.droppedBombset1 = false;
@@ -19,16 +19,16 @@ ENT.StartAngle = NULL;
 ENT.WasInWorld = false;
 
 function ENT:PhysicsUpdate()
-	self.PhysObj:SetVelocity(self.Entity:GetForward()*7000)
-	self.Entity:SetPos(Vector(self.Entity:GetPos().x, self.Entity:GetPos().y, self.ground));
-	self.Entity:SetAngles(self.StartAngle)
+	self.PhysObj:SetVelocity(self:GetForward()*7000)
+	self:SetPos(Vector(self:GetPos().x, self:GetPos().y, self.ground));
 
-	if( !self.Entity:IsInWorld() && self.WasInWorld) then
-		self.Entity:Remove();
-		hook.Remove( "PhysgunPickup", "DisallowJetPickUp");
+	self:SetAngles(self.StartAngle)
+
+	if( !self:IsInWorld() && self.WasInWorld) then
+		self:Remove();
 	end
 	
-	if !self.WasInWorld && self.Entity:IsInWorld() then
+	if !self.WasInWorld && self:IsInWorld() then
 		self.WasInWorld = true;
 	end
 	
@@ -38,92 +38,102 @@ function ENT:PhysicsUpdate()
 	end	
 end
 
-function ENT:Initialize()	
-	local bombSent = "sent_air_strike_cluster"
-	self.Owner = self.Entity:GetVar("owner",Entity(1))	
+function ENT:MW2_Init()	
 	self.StartPos = self:GetVar("WallLocation", NULL);
 	self.FlyAng = self:GetVar("FlyAngle", NULL);
---	self.dropPos = self.Owner:GetNetworkedVector("Hover_zone_vector");	
+
 	self.dropPos = self:GetVar("JetDropZone", NULL)
-	self.ground = findGround() + 2000;
-	//self.ground = self.dropPos.z + 2000;
+	self.ground = self:findGround() + 2000;
 	
 	if self.StartPos != NULL && self.FlyAng != NULL then
 		self.spawnZone = Vector(self.StartPos.x, self.StartPos.y, self.ground);
 		self.StartAngle = self.FlyAng;
 	else
-		x = findWall("x", self.ground)
+		local x,x2 = self:FindBounds(true)
 		self.spawnZone = Vector(x,self.dropPos.y,self.ground);
 		self.StartAngle = Angle(0, 180, 0);
 		self.Owner:SetNetworkedVector("Harrier_Spawn_Pos", self.spawnZone);
-	end	
-		
-	self.Entity:SetModel( jetModel )
-	self.Entity:SetColor(255,255,255,255)
+	end			
 	self.Entity:SetPos(self.spawnZone )
 	self.Entity:SetAngles( self.StartAngle )
 	
-	self.Entity:PhysicsInit( SOLID_VPHYSICS )
-	self.Entity:SetMoveType( MOVETYPE_VPHYSICS )	
-	self.Entity:SetSolid( SOLID_VPHYSICS )
-
-	self.PhysObj = self.Entity:GetPhysicsObject()
-	if (self.PhysObj:IsValid()) then
-		self.PhysObj:EnableGravity(false);
-		self.PhysObj:Wake()
-	end
-
-	self.bomb = ents.Create( bombSent );
-	self.bomb:SetPos(self:GetPos() + (self:GetRight() * 99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
-	self.bomb:SetAngles(self.Entity:GetAngles());
-	self.bomb:SetVar("owner",self.Owner)
-	self.bomb:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
-	self.bomb:Spawn();
-	self.bomb:SetNotSolid(true);
-
-	self.bomb2 = ents.Create( bombSent );
-	self.bomb2:SetPos(self:GetPos() + (self:GetRight() * 144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
-	self.bomb2:SetAngles(self.Entity:GetAngles());
-	self.bomb2:SetVar("owner",self.Owner)
-	self.bomb2:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
-	self.bomb2:Spawn()
-	self.bomb2:SetNotSolid(true);
-
-	self.bomb3 = ents.Create( bombSent );
-	self.bomb3:SetPos(self:GetPos() + (self:GetRight() * -99) + (self:GetUp() * -21) + (self:GetForward() * -149) ) 	
-	self.bomb3:SetAngles(self.Entity:GetAngles());
-	self.bomb3:SetVar("owner",self.Owner)
-	self.bomb3:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
-	self.bomb3:Spawn()
-	self.bomb3:SetNotSolid(true);
-
-	self.bomb4 = ents.Create( bombSent );
-	self.bomb4:SetPos(self:GetPos() + (self:GetRight() * -144) + (self:GetUp() * -20) + (self:GetForward() * -176) )
-	self.bomb4:SetAngles(self.Entity:GetAngles());
-	self.bomb4:SetVar("owner",self.Owner)
-	self.bomb4:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
-	self.bomb4:Spawn()	
-	self.bomb4:SetNotSolid(true);
-
-
-	constraint.NoCollide( self.Entity, self.bomb, 0, 0 );
-	constraint.NoCollide( self.Entity, self.bomb2, 0, 0 );
-	constraint.NoCollide( self.Entity, self.bomb4, 0, 0 );
-	constraint.NoCollide( self.Entity, self.bomb3, 0, 0 );
-
-	bool = false;
-
-	constraint.Weld(self.Entity, self.bomb, 0,0,0, bool)
-	constraint.Weld(self.Entity, self.bomb2, 0,0,0, bool)
-	constraint.Weld(self.Entity, self.bomb3, 0,0,0, bool)
-	constraint.Weld(self.Entity, self.bomb4, 0,0,0, bool)
 	
+	self:FindMinHeight()
+	self.spawnZone.z = self:FindMinHeight();
+	self.Entity:SetPos(self.spawnZone )	
+	self:SpawnBombs()
+
 	constraint.NoCollide( self.Entity, GetWorldEntity(), 0, 0 );	
 	self.PhysgunDisabled = true
-	self.bomb.PhysgunDisabled = true
-	self.bomb2.PhysgunDisabled = true
-	self.bomb3.PhysgunDisabled = true
-	self.bomb4.PhysgunDisabled = true
+
+end
+ENT.BombPos = { Vector(-149, 99, -21), Vector(-149, -99, -21), Vector(-176, 144, -21), Vector(-176, -144, -21) };
+ENT.Bombs = {};
+function ENT:SpawnBombs()
+	local bombSent = "sent_air_strike_cluster"
+	for k,v in pairs( self.BombPos ) do
+		local bomb = ents.Create( bombSent );
+		bomb:SetPos( self:LocalToWorld(v) )
+		bomb:SetAngles(self:GetAngles());
+		bomb:SetVar("owner",self.Owner)
+		bomb:SetVar("FromCarePackage", self:GetVar("FromCarePackage",false))
+		bomb:Spawn();
+		bomb:SetNotSolid(true);		
+		constraint.NoCollide( self, bomb, 0, 0 );
+		constraint.Weld(self, bomb, 0,0,0, false)	
+		bomb.PhysgunDisabled = true
+		
+		table.insert(self.Bombs, bomb)
+	end
+end
+
+function ENT:FindMinHeight()
+	local startPos = self:GetPos()
+	local endPos = startPos + ( self:GetForward() * 1000000)
+	local filterList = {self}
+	
+	local trace = {}
+	trace.start = startPos;
+	trace.endpos = endPos;
+	trace.filter = filterList;
+
+	local traceData;
+	local bool = true;
+	local maxNumber = 0;
+	local skyLocation = -1;
+	while bool do
+		traceData = util.TraceLine(trace);
+		if traceData.HitSky then
+			skyLocation = traceData.HitPos.z;
+			bool = false;
+		elseif traceData.HitWorld then
+			local loc = traceData.HitPos 
+
+			local skytrace = {}
+			skytrace.start = Vector( loc.x, loc.y, self.Sky )
+			skytrace.endpos = loc
+			local tr = util.TraceLine(skytrace)
+
+			local hit = tr.HitPos + Vector(0,0, 500);
+			
+			trace.start = hit.z;
+			trace.endpos = hit.z;
+		else 
+			table.insert(filterList, traceData.Entity)
+		end
+			
+		if maxNumber >= 300 then
+			MsgN("Reached max number here, no luck in finding a skyBox");
+			bool = false;
+		end
+		maxNumber = maxNumber + 1;
+	end
+	
+	if self:GetPos().z > skyLocation then 
+		return self:GetPos().z;
+	end
+	
+	return skyLocation;	
 end
 
 function ENT:OnTakeDamage( dmginfo )
@@ -140,124 +150,34 @@ end
 
 function ENT:DropBomb()
 	if !self.droppedBombset1 then	
-		constraint.RemoveConstraints(self.bomb, "Weld")
-		constraint.RemoveConstraints(self.bomb2, "Weld")
-		self.bomb:SetNotSolid(false);
-		self.bomb2:SetNotSolid(false);
+		for i=1,2 do 
+			local bomb = self.Bombs[i]
+			constraint.RemoveConstraints(bomb, "Weld")
+			bomb:SetNotSolid(false);
 		
-		self.bomb:GetPhysicsObject():SetVelocity(Vector(0,0,0));
-		self.bomb2:GetPhysicsObject():SetVelocity(Vector(0,0,0));
+			bomb:GetPhysicsObject():SetVelocity(Vector(0,0,0));
 		
-		self.bomb:SetVar("HasBeenDropped",true);
-		self.bomb2:SetVar("HasBeenDropped",true);
-		
+			bomb:SetVar("HasBeenDropped",true);
+			
+		end
+		table.remove( self.Bombs, 2 )
+		table.remove( self.Bombs, 1 )
 		self.droppedBombset1 = true;
 		self:EmitSound(flyBySound, 500, 100)
 	elseif !self.droppedBombset2 then
-		constraint.RemoveConstraints(self.bomb3, "Weld")
-		constraint.RemoveConstraints(self.bomb4, "Weld")
-		self.bomb3:SetNotSolid(false);
-		self.bomb4:SetNotSolid(false);
+		for i=1,2 do 
+			local bomb = self.Bombs[i]
+			constraint.RemoveConstraints(bomb, "Weld")
+			bomb:SetNotSolid(false);
 		
-		self.bomb3:GetPhysicsObject():SetVelocity(Vector(0,0,0));
-		self.bomb4:GetPhysicsObject():SetVelocity(Vector(0,0,0));
+			bomb:GetPhysicsObject():SetVelocity(Vector(0,0,0));
 		
-		self.bomb3:SetVar("HasBeenDropped",true);
-		self.bomb4:SetVar("HasBeenDropped",true);
-		
+			bomb:SetVar("HasBeenDropped",true);
+			
+		end
+		table.remove( self.Bombs, 2 )
+		table.remove( self.Bombs, 1 )
 		self.droppedBombset2 = true;
 	end
 end
 
-function findGround()
-
-	local minheight = -16384
-	local startPos = Vector(0,0,0);
-	local endPos = Vector(0, 0,minheight);
-	local filterList = {}
-
-	local trace = {}
-	trace.start = startPos;
-	trace.endpos = endPos;
-	trace.filter = filterList;
-
-	local traceData;
-	local hitSky;
-	local hitWorld;
-	local bool = true;
-	local maxNumber = 0;
-	local groundLocation = -1;
-	while bool do
-		traceData = util.TraceLine(trace);
-		hitSky = traceData.HitSky;
-		hitWorld = traceData.HitWorld;
-		if hitWorld then
-			groundLocation = traceData.HitPos.z;			
-			bool = false;
-		else 
-			table.insert(filterList, traceData.Entity)
-		end
-			
-		if maxNumber >= 100 then
-			MsgN("Reached max number here, no luck in finding the ground");
-			bool = false;
-		end		
-	end
-	
-	return groundLocation;
-end
-
-function findWall(axis, height)
-
-	local length = 16384
-	local startPos = Vector(0,0,height);
-	local endPos;
-	if axis == "x" then 
-		endPos = Vector(length, 0,height);
-	elseif axis == "y" then 
-		endPos = Vector(0, length,height);
-	end
-	
-	local filterList = {}
-
-	local trace = {}
-	trace.start = startPos;
-	trace.endpos = endPos;
-	trace.filter = filterList;
-
-	local traceData;
-	local hitSky;
-	local hitWorld;
-	local bool = true;
-	local maxNumber = 0;
-	local wallLocation = -1;
-	while bool do
-		traceData = util.TraceLine(trace);
-		hitSky = traceData.HitSky;
-		hitWorld = traceData.HitWorld;
-		if hitSky then
-			if axis == "x" then
-				wallLocation = traceData.HitPos.x;
-			elseif axis == "y" then
-				wallLocation = traceData.HitPos.y;
-			end
-			bool = false;
-		elseif hitWorld then
-			if axis == "x" then
-				trace.start = traceData.HitPos + Vector(50,0,0);
-			elseif axis == "y" then
-				trace.start = traceData.HitPos + Vector(0,50,0);
-			end
-		else 
-			table.insert(filterList, traceData.Entity)
-		end
-			
-		if maxNumber >= 100 then
-			MsgN("Reached max number here, no luck in finding the wall");
-			bool = false;
-		end		
-		maxNumber = maxNumber + 1;
-	end
-	
-	return wallLocation;
-end
